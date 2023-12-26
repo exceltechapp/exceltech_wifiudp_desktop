@@ -1,16 +1,18 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:data_table_2/data_table_2.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../UDP/UDP.dart';
+import '../../model/DeviceId.dart';
 import '../../model/DeviceJson.dart';
 
 class tableView extends StatefulWidget {
-  const tableView({super.key, this.MapModel});
-  final dynamic MapModel;
+  const tableView({super.key});
   @override
   State<tableView> createState() => _tableViewState();
 }
@@ -36,12 +38,19 @@ class _tableViewState extends State<tableView> {
     "Pre-overload", //16
     "High voltage Alarm & Pre-overload Alarm", //17
   ];
-
+  // define set for getting current device
+  Set<dynamic> DeviceList = {};
+  // define list for getting DeviceDataList
   List<dynamic> DeviceDataList = [];
+
   var LockVar = 1;
+  var selectDevice;
+
+  bool WaitTimeCountDeviceListBool = false;
+
   getElemantTable() {
-    if (widget.MapModel != null) {
-      var MapModelDecode = jsonDecode(widget.MapModel);
+    if (selectDevice != null) {
+      var MapModelDecode = jsonDecode(selectDevice);
       UDPHandler.eventsStream.listen((event) {
         var DecodeEvent = jsonDecode(event);
         if (DecodeEvent["DEN"] != null && DecodeEvent["MAC"] != null) {
@@ -49,18 +58,18 @@ class _tableViewState extends State<tableView> {
               DecodeEvent["MAC"] == MapModelDecode["DeviceMac"]) {
             var id = DecodeEvent["ID"];
             DeviceJson newData = DeviceJson.fromJson(DecodeEvent);
-           if(this.mounted){
-             setState(() {
-               DeviceDataList[id - 1] = newData;
-             });
-           }
+            if (this.mounted) {
+              setState(() {
+                DeviceDataList[id - 1] = newData;
+              });
+            }
           }
         }
       });
       return DeviceDataList.toList().map((e1) {
         //int index = DeviceList.indexOf(e);
         DeviceJson dataClass = e1;
-        var  e = dataClass.toJson();
+        var e = dataClass.toJson();
         return DataRow(cells: [
           DataCell(Align(
             alignment: Alignment.center,
@@ -241,26 +250,162 @@ class _tableViewState extends State<tableView> {
     }
   }
 
-  @override
-  void initState() {
-    if(this.mounted){
+  void getDevice() {
+    UDPHandler.eventsStream.listen((event) {
+      var decodeEvent = jsonDecode(event);
+      DeviceId newDeviceModel =
+          DeviceId(decodeEvent["DEN"], decodeEvent["MAC"], decodeEvent["SIZE"]);
+      if (this.mounted) {
+        setState(() {
+          DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+        });
+      }
+    });
+    if (this.mounted) {
       setState(() {
-        DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(32, (index) => DeviceJson(ID: index+1)));
+        DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
+            32, (index) => DeviceJson(ID: index + 1)));
       });
     }
+  }
+
+  WaitTimeCountDeviceList() {
+    Timer mytimer = Timer.periodic(Duration(minutes: 1, seconds: 10), (timer) {
+      if (this.mounted) {
+        setState(() {
+          WaitTimeCountDeviceListBool = true;
+        });
+      }
+    });
+    if (WaitTimeCountDeviceListBool == false) {
+      bool calledOnce = true;
+      if (calledOnce == true) {
+        getDevice();
+        if (this.mounted) {
+          setState(() {
+            calledOnce = false;
+          });
+        }
+      }
+      return CircularProgressIndicator();
+    } else {
+      mytimer.cancel();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Padding(
+            padding: EdgeInsets.all(10),
+            child: IconButton(
+              icon: Icon(Icons.restart_alt),
+              onPressed: () {
+                if (this.mounted) {
+                  setState(() {
+                    WaitTimeCountDeviceListBool = false;
+                  });
+                }
+              },
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(10),
+            child: Text("Device's Not Found"),
+          )
+        ],
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    getDevice();
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-        child: Padding(
+    return DeviceList.isEmpty
+        ? Center(
+            child: WaitTimeCountDeviceList(),
+          )
+        : Column(
+      children: [
+        Align(
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: 200,
+            child: DropdownButtonFormField2<String>(
+              isExpanded: true,
+              decoration: InputDecoration(
+                // Add Horizontal padding using menuItemStyleData.padding so it matches
+                // the menu padding when button's width is not specified.
+                contentPadding:
+                const EdgeInsets.symmetric(vertical: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                // Add more decoration..
+              ),
+              hint: const Text(
+                'Select MSD Device',
+                style: TextStyle(fontSize: 14),
+              ),
+              items:
+              DeviceList.map((item) => DropdownMenuItem<String>(
+                value: item.toString(),
+                child: Text(
+                  jsonDecode(item)["DeviceName"],
+                  style: const TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              )).toList(),
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select MSD Device.';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                //Do something when selected item is changed.
+                setState(() {
+                  selectDevice = value;
+                });
+              },
+              onSaved: (value) {
+                // selectedValue = value.toString();
+              },
+              buttonStyleData: const ButtonStyleData(
+                padding: EdgeInsets.only(right: 8),
+              ),
+              iconStyleData: const IconStyleData(
+                icon: Icon(
+                  Icons.arrow_drop_down,
+                  color: Colors.black45,
+                ),
+                iconSize: 24,
+              ),
+              dropdownStyleData: DropdownStyleData(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              menuItemStyleData: const MenuItemStyleData(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+              ),
+            ),
+          ),
+        ),
+        Expanded(child: Padding(
             padding: const EdgeInsets.all(16),
             child: DataTable2(
               columnSpacing: 0,
               horizontalMargin: 0,
               minWidth: 0,
               dataRowHeight: 30,
-              headingRowColor: MaterialStatePropertyAll(Colors.grey.shade300),
+              headingRowColor:
+              MaterialStatePropertyAll(Colors.grey.shade300),
               border: TableBorder.all(color: Colors.black26),
               fixedTopRows: 1,
               fixedLeftColumns: 1,
@@ -307,26 +452,26 @@ class _tableViewState extends State<tableView> {
                       alignment: Alignment.center,
                       child: RichText(
                           text: TextSpan(children: [
-                        TextSpan(
-                            text: 'I',
-                            style: GoogleFonts.robotoMono(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold)),
-                        WidgetSpan(
-                          child: Transform.translate(
-                            offset: const Offset(2, 7),
-                            child: Text(
-                              'R',
-                              //superscript is usually smaller in size
-                              //textScaleFactor: 0.7,
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        )
-                      ])),
+                            TextSpan(
+                                text: 'I',
+                                style: GoogleFonts.robotoMono(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
+                            WidgetSpan(
+                              child: Transform.translate(
+                                offset: const Offset(2, 7),
+                                child: Text(
+                                  'R',
+                                  //superscript is usually smaller in size
+                                  //textScaleFactor: 0.7,
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            )
+                          ])),
                     ),
                     size: ColumnSize.M),
                 DataColumn2(
@@ -334,26 +479,26 @@ class _tableViewState extends State<tableView> {
                       alignment: Alignment.center,
                       child: RichText(
                           text: TextSpan(children: [
-                        TextSpan(
-                            text: 'I',
-                            style: GoogleFonts.robotoMono(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold)),
-                        WidgetSpan(
-                          child: Transform.translate(
-                            offset: const Offset(2, 7),
-                            child: Text(
-                              'Y',
-                              //superscript is usually smaller in size
-                              //textScaleFactor: 0.7,
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        )
-                      ])),
+                            TextSpan(
+                                text: 'I',
+                                style: GoogleFonts.robotoMono(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
+                            WidgetSpan(
+                              child: Transform.translate(
+                                offset: const Offset(2, 7),
+                                child: Text(
+                                  'Y',
+                                  //superscript is usually smaller in size
+                                  //textScaleFactor: 0.7,
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            )
+                          ])),
                     ),
                     size: ColumnSize.M),
                 DataColumn2(
@@ -361,26 +506,26 @@ class _tableViewState extends State<tableView> {
                       alignment: Alignment.center,
                       child: RichText(
                           text: TextSpan(children: [
-                        TextSpan(
-                            text: 'I',
-                            style: GoogleFonts.robotoMono(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold)),
-                        WidgetSpan(
-                          child: Transform.translate(
-                            offset: const Offset(2, 7),
-                            child: Text(
-                              'B',
-                              //superscript is usually smaller in size
-                              //textScaleFactor: 0.7,
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        )
-                      ])),
+                            TextSpan(
+                                text: 'I',
+                                style: GoogleFonts.robotoMono(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
+                            WidgetSpan(
+                              child: Transform.translate(
+                                offset: const Offset(2, 7),
+                                child: Text(
+                                  'B',
+                                  //superscript is usually smaller in size
+                                  //textScaleFactor: 0.7,
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            )
+                          ])),
                     ),
                     size: ColumnSize.M),
                 DataColumn2(
@@ -388,27 +533,27 @@ class _tableViewState extends State<tableView> {
                       alignment: Alignment.center,
                       child: RichText(
                           text: TextSpan(children: [
-                        TextSpan(
-                            text: 'V',
-                            style: GoogleFonts.robotoMono(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                fontStyle: FontStyle.italic)),
-                        WidgetSpan(
-                          child: Transform.translate(
-                            offset: const Offset(2, 7),
-                            child: Text(
-                              'RY',
-                              //superscript is usually smaller in size
-                              //textScaleFactor: 0.7,
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        )
-                      ])),
+                            TextSpan(
+                                text: 'V',
+                                style: GoogleFonts.robotoMono(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    fontStyle: FontStyle.italic)),
+                            WidgetSpan(
+                              child: Transform.translate(
+                                offset: const Offset(2, 7),
+                                child: Text(
+                                  'RY',
+                                  //superscript is usually smaller in size
+                                  //textScaleFactor: 0.7,
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            )
+                          ])),
                     ),
                     size: ColumnSize.M),
                 DataColumn2(
@@ -416,27 +561,27 @@ class _tableViewState extends State<tableView> {
                       alignment: Alignment.center,
                       child: RichText(
                           text: TextSpan(children: [
-                        TextSpan(
-                            text: 'V',
-                            style: GoogleFonts.robotoMono(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                fontStyle: FontStyle.italic)),
-                        WidgetSpan(
-                          child: Transform.translate(
-                            offset: const Offset(2, 7),
-                            child: Text(
-                              'YB',
-                              //superscript is usually smaller in size
-                              //textScaleFactor: 0.7,
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        )
-                      ])),
+                            TextSpan(
+                                text: 'V',
+                                style: GoogleFonts.robotoMono(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    fontStyle: FontStyle.italic)),
+                            WidgetSpan(
+                              child: Transform.translate(
+                                offset: const Offset(2, 7),
+                                child: Text(
+                                  'YB',
+                                  //superscript is usually smaller in size
+                                  //textScaleFactor: 0.7,
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            )
+                          ])),
                     ),
                     size: ColumnSize.M),
                 DataColumn2(
@@ -444,27 +589,27 @@ class _tableViewState extends State<tableView> {
                       alignment: Alignment.center,
                       child: RichText(
                           text: TextSpan(children: [
-                        TextSpan(
-                            text: 'V',
-                            style: GoogleFonts.robotoMono(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                fontStyle: FontStyle.italic)),
-                        WidgetSpan(
-                          child: Transform.translate(
-                            offset: const Offset(2, 7),
-                            child: Text(
-                              'BR',
-                              //superscript is usually smaller in size
-                              //textScaleFactor: 0.7,
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        )
-                      ])),
+                            TextSpan(
+                                text: 'V',
+                                style: GoogleFonts.robotoMono(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    fontStyle: FontStyle.italic)),
+                            WidgetSpan(
+                              child: Transform.translate(
+                                offset: const Offset(2, 7),
+                                child: Text(
+                                  'BR',
+                                  //superscript is usually smaller in size
+                                  //textScaleFactor: 0.7,
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            )
+                          ])),
                     ),
                     size: ColumnSize.M),
                 DataColumn2(
@@ -499,26 +644,26 @@ class _tableViewState extends State<tableView> {
                       alignment: Alignment.center,
                       child: RichText(
                           text: TextSpan(children: [
-                        TextSpan(
-                            text: 'I',
-                            style: GoogleFonts.robotoMono(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold)),
-                        WidgetSpan(
-                          child: Transform.translate(
-                            offset: const Offset(2, 7),
-                            child: Text(
-                              'E',
-                              //superscript is usually smaller in size
-                              //textScaleFactor: 0.7,
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        )
-                      ])),
+                            TextSpan(
+                                text: 'I',
+                                style: GoogleFonts.robotoMono(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
+                            WidgetSpan(
+                              child: Transform.translate(
+                                offset: const Offset(2, 7),
+                                child: Text(
+                                  'E',
+                                  //superscript is usually smaller in size
+                                  //textScaleFactor: 0.7,
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            )
+                          ])),
                     ),
                     size: ColumnSize.M),
                 DataColumn2(
@@ -549,6 +694,8 @@ class _tableViewState extends State<tableView> {
                 ),
               ),
               rows: getElemantTable(),
-            )));
+            )))
+      ],
+    );
   }
 }

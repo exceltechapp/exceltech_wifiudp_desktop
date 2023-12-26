@@ -21,89 +21,26 @@ class mainScreen extends StatefulWidget {
 }
 
 class _mainScreenState extends State<mainScreen> {
-  // define set for getting current device
-  Set<dynamic> DeviceList = {};
   // Controller to handle bottom nav bar and also handles initial page
   final _controller = NotchBottomBarController(index: 0);
   var SwitchViewIndex = 0;
-  bool WaitTimeCountDeviceListBool = false;
   // select device name
   var selectDevice;
-
-  void getDevice() {
-    UDPHandler.eventsStream.listen((event) {
-      var decodeEvent = jsonDecode(event);
-      DeviceId newDeviceModel =
-          DeviceId(decodeEvent["DEN"], decodeEvent["MAC"],decodeEvent["SIZE"]);
-      if (this.mounted) {
-        setState(() {
-          DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
-        });
-      }
-    });
-  }
-
-  WaitTimeCountDeviceList() {
-    Timer mytimer = Timer.periodic(Duration(minutes: 1, seconds: 10), (timer) {
-      if (this.mounted) {
-        setState(() {
-          WaitTimeCountDeviceListBool = true;
-        });
-      }
-    });
-    if (WaitTimeCountDeviceListBool == false) {
-      bool calledOnce = true;
-      if (calledOnce == true) {
-        getDevice();
-        if (this.mounted) {
-          setState(() {
-            calledOnce = false;
-          });
-        }
-      }
-      return CircularProgressIndicator();
-    } else {
-      mytimer.cancel();
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(10),
-            child: IconButton(
-              icon: Icon(Icons.restart_alt),
-              onPressed: () {
-                if (this.mounted) {
-                  setState(() {
-                    WaitTimeCountDeviceListBool = false;
-                  });
-                }
-              },
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(10),
-            child: Text("Device's Not Found"),
-          )
-        ],
-      );
-    }
-  }
+  var selectDeviceID;
 
   SwitchView(var index) {
     if (index == 0) {
-      return tableView(
-        MapModel: selectDevice,
-      );
+      return tableView();
     }
     if (index == 1) {
+      //selectDeviceID = null;
       return Align(
         alignment: Alignment.center,
         child: graphView(),
       );
     }
     if (index == 2) {
+      //selectDeviceID = null;
       return Align(
         alignment: Alignment.center,
         child: logView(),
@@ -114,18 +51,13 @@ class _mainScreenState extends State<mainScreen> {
   @override
   void initState() {
     UDPHandler.startUDPConnection(context);
-    getDevice();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: DeviceList.isEmpty
-          ? Center(
-              child: WaitTimeCountDeviceList(),
-            )
-          : Row(
+      body: Row(
               mainAxisSize: MainAxisSize.max,
               children: [
                 Drawer(
@@ -185,7 +117,7 @@ class _mainScreenState extends State<mainScreen> {
                                     SwitchViewIndex = 1;
                                   });
                                 },
-                                icon: Icon(FontAwesomeIcons.gauge)),
+                                icon: Icon(FontAwesomeIcons.chartLine)),
                           ),
                         ),
                         Divider(
@@ -209,7 +141,7 @@ class _mainScreenState extends State<mainScreen> {
                                     SwitchViewIndex = 2;
                                   });
                                 },
-                                icon: Icon(FontAwesomeIcons.chartLine)),
+                                icon: Icon(FontAwesomeIcons.file)),
                           ),
                         ),
                         Divider(
@@ -222,80 +154,7 @@ class _mainScreenState extends State<mainScreen> {
                     ),
                   ),
                 ),
-                Expanded(
-                    child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Align(
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        width: 200,
-                        child: DropdownButtonFormField2<String>(
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            // Add Horizontal padding using menuItemStyleData.padding so it matches
-                            // the menu padding when button's width is not specified.
-                            contentPadding:
-                                const EdgeInsets.symmetric(vertical: 16),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            // Add more decoration..
-                          ),
-                          hint: const Text(
-                            'Select MSD Device',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          items:
-                              DeviceList.map((item) => DropdownMenuItem<String>(
-                                    value: item.toString(),
-                                    child: Text(
-                                      jsonDecode(item)["DeviceName"],
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  )).toList(),
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Please select MSD Device.';
-                            }
-                            return null;
-                          },
-                          onChanged: (value) {
-                            //Do something when selected item is changed.
-                            setState(() {
-                              selectDevice = value;
-                            });
-                          },
-                          onSaved: (value) {
-                            // selectedValue = value.toString();
-                          },
-                          buttonStyleData: const ButtonStyleData(
-                            padding: EdgeInsets.only(right: 8),
-                          ),
-                          iconStyleData: const IconStyleData(
-                            icon: Icon(
-                              Icons.arrow_drop_down,
-                              color: Colors.black45,
-                            ),
-                            iconSize: 24,
-                          ),
-                          dropdownStyleData: DropdownStyleData(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                          menuItemStyleData: const MenuItemStyleData(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SwitchView(SwitchViewIndex)
-                  ],
-                ))
+                Expanded(child: SwitchView(SwitchViewIndex))
               ],
             ),
     );

@@ -49,6 +49,7 @@ dependencies:
   syncfusion_flutter_xlsio: ^22.2.7
   omni_datetime_picker: ^1.0.8
   syncfusion_officechart: ^22.2.9
+  msgpack_dart: ^1.0.1
 
 dev_dependencies:
   flutter_test:
