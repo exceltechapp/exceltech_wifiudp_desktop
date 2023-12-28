@@ -118,7 +118,8 @@ class _logViewState extends State<logView> {
       );
     }
   }
-
+  // define buff var for last min
+  var LastMinCheck;
   // func for getting log from hive
   void getLog(dynamic startTime, dynamic endTime) {
     UDPHandler.getLogsByTimeRange(
@@ -140,12 +141,14 @@ class _logViewState extends State<logView> {
                       int.parse(selectDeviceId.toString().split("-").last) &&
                   newdata["MAC"] == key) {
                 //var newModel = ExcelFileModel();
-                ExcelFileModel newModel =
-                    ExcelFileModel(DateTime.parse(log.time), newdata);
-                if (mounted) {
-                  setState(() {
-                    newObjectDataList.add(newModel);
-                  });
+                ExcelFileModel newModel = ExcelFileModel(DateTime.parse(log.time), newdata);
+                if(LastMinCheck != DateTime.parse(log.time).minute){
+                  if (mounted) {
+                    setState(() {
+                      newObjectDataList.add(newModel);
+                      LastMinCheck = DateTime.parse(log.time).minute;
+                    });
+                  }
                 }
               }
             } catch (e) {

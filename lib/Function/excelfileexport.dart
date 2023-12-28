@@ -163,13 +163,14 @@ class ExcelFile {
     await FileSaveHelper.saveAndLaunchFile(bytes, 'DeviceReport.xlsx');
     newObjectDataList.clear();
   }
-
+  // define buff var for last min
+  var LastMinCheck;
   // func called for getting log from hive database
   void getLog(dynamic startTime, dynamic endTime) async {
     List<dynamic> newObjectDataList = [];
 
     try {
-      List<LogEntry> logs = await UDPHandler.getLogsByTimeRangeAndInterval(
+      List<LogEntry> logs = await UDPHandler.getLogsByTimeRange(
         DateTime.parse(startTime.toString()),
         DateTime.parse(endTime.toString()),
       );
@@ -188,7 +189,10 @@ class ExcelFile {
                 newdata["MAC"] == key) {
               ExcelFileModel newModel =
               ExcelFileModel(DateTime.parse(log.time), newdata);
-              newObjectDataList.add(newModel);
+              if(LastMinCheck != DateTime.parse(log.time).minute) {
+                newObjectDataList.add(newModel);
+                LastMinCheck = DateTime.parse(log.time).minute;
+              }
             }
           } catch (e) {
             print(e);

@@ -212,7 +212,8 @@ class _chartLogState extends State<chartLog> {
           markerSettings: const MarkerSettings(isVisible: false)),
     ];
   }
-
+  // define buff var for last min
+  var LastMinCheck;
   // func getting log from local database
   void getLog(dynamic startTime, dynamic endTime) {
     //SSEHandler.clearLogs();
