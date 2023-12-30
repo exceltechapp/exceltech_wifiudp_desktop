@@ -50,6 +50,7 @@ dependencies:
   omni_datetime_picker: ^1.0.8
   syncfusion_officechart: ^22.2.9
   msgpack_dart: ^1.0.1
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

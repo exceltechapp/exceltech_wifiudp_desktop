@@ -3,10 +3,12 @@ import 'dart:convert';
 
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:exceltech_wifiudp/Screen/view/managelist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Database/LogModel.dart';
 import '../../Function/excelfileexport.dart';
@@ -56,6 +58,29 @@ class _logViewState extends State<logView> {
   List<dynamic> DeviceDataList = [];
   // define list for log data elemant
   List<dynamic> newObjectDataList = [];
+  // define function save to preferences
+  GetPreferences(String key) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Try reading data from the 'items' key. If it doesn't exist, returns null.
+    final List<String>? items = prefs.getStringList(key);
+    return items;
+  }
+
+  //define var for stop  loop
+  bool buildLock = false;
+  // define function save to preferences
+  void SavePreferences(String key, List<String> payload) async {
+    //
+    if (buildLock == false) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      if (payload.isNotEmpty) {
+        await prefs.setStringList(key, payload);
+        buildLock = true;
+      }
+    }
+  }
+
   // define function for getdevice
   void getDevice() {
     UDPHandler.eventsStream.listen((event) {
@@ -118,12 +143,12 @@ class _logViewState extends State<logView> {
       );
     }
   }
+
   // define buff var for last min
   var LastMinCheck;
   // func for getting log from hive
   void getLog(dynamic startTime, dynamic endTime) {
-    UDPHandler.getLogsByTimeRange(
-            DateTime.parse(startTime.toString()),
+    UDPHandler.getLogsByTimeRange(DateTime.parse(startTime.toString()),
             DateTime.parse(endTime.toString()))
         .then(
       (List<LogEntry> logs) {
@@ -136,13 +161,15 @@ class _logViewState extends State<logView> {
             try {
               Map<String, dynamic> newdata = jsonDecode(log.data);
               print(newdata["ID"]);
-              print(newdata["ID"] == int.parse(selectDeviceId.toString().split("-").last));
+              print(newdata["ID"] ==
+                  int.parse(selectDeviceId.toString().split("-").last));
               if (newdata["ID"] ==
                       int.parse(selectDeviceId.toString().split("-").last) &&
                   newdata["MAC"] == key) {
                 //var newModel = ExcelFileModel();
-                ExcelFileModel newModel = ExcelFileModel(DateTime.parse(log.time), newdata);
-                if(LastMinCheck != DateTime.parse(log.time).minute){
+                ExcelFileModel newModel =
+                    ExcelFileModel(DateTime.parse(log.time), newdata);
+                if (LastMinCheck != DateTime.parse(log.time).minute) {
                   if (mounted) {
                     setState(() {
                       newObjectDataList.add(newModel);
@@ -578,6 +605,14 @@ class _logViewState extends State<logView> {
   // run once on page run
   @override
   void initState() {
+    GetPreferences("DeviceNameList").then((x) {
+      if(this.mounted){
+        setState(() {
+          DeviceList.addAll(x);
+        });
+      }
+      print(x);
+    });
     getDevice();
     super.initState();
   }
@@ -770,11 +805,12 @@ class _logViewState extends State<logView> {
                                     FlutterToastr.show("Please Wait", context);
                                     if (mounted) {
                                       newObjectDataList.clear();
-                                      startTime = dateTimeList?[0].toIso8601String();
-                                      endTime = dateTimeList?[1].toIso8601String();
+                                      startTime =
+                                          dateTimeList?[0].toIso8601String();
+                                      endTime =
+                                          dateTimeList?[1].toIso8601String();
                                     }
-                                    getLog(
-                                        dateTimeList?[0].toIso8601String(),
+                                    getLog(dateTimeList?[0].toIso8601String(),
                                         dateTimeList?[1].toIso8601String());
                                     print(
                                         "Start dateTime: ${dateTimeList?[0].toIso8601String()}");
@@ -783,23 +819,33 @@ class _logViewState extends State<logView> {
                                   },
                                   icon: Icon(Icons.date_range)))
                           : Card(),
-                      selectDevice != null && selectDeviceId != null && startTime != null && endTime != null ?
-                      Padding(
-                          padding: EdgeInsets.symmetric(
-                              vertical: 5, horizontal: 15),
-                          child: IconButton(
-                              onPressed: () {
-                                ExcelFile newfunc = ExcelFile(selectDevice, int.parse(selectDeviceId.toString().split("-").last));
-                                newfunc.getLog(startTime, endTime);
-                              },
-                              icon: Icon(Icons.file_download)))
+                      selectDevice != null &&
+                              selectDeviceId != null &&
+                              startTime != null &&
+                              endTime != null
+                          ? Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 5, horizontal: 15),
+                              child: IconButton(
+                                  onPressed: () {
+                                    ExcelFile newfunc = ExcelFile(
+                                        selectDevice,
+                                        int.parse(selectDeviceId
+                                            .toString()
+                                            .split("-")
+                                            .last));
+                                    newfunc.getLog(startTime, endTime);
+                                  },
+                                  icon: Icon(Icons.file_download)))
                           : Card(),
                     ],
                   ),
-                  selectDevice != null && selectDeviceId != null ?
-                  showTable() :Expanded(child:  Center(
-                    child: CircularProgressIndicator(),
-                  ))
+                  selectDevice != null && selectDeviceId != null
+                      ? showTable()
+                      : Expanded(
+                          child: Center(
+                          child: CircularProgressIndicator(),
+                        ))
                 ],
               ));
   }

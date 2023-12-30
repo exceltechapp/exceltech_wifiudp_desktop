@@ -6,6 +6,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../../Database/LogModel.dart';
@@ -31,6 +32,8 @@ class _graphViewState extends State<graphView> {
   Set<dynamic> DeviceList = {};
   // define list for getting DeviceDataList
   List<dynamic> DeviceDataList = [];
+  // define List for Saving DeviceList
+  Set<String> SPDeviceList = {};
   // define function for getdevice
   void getDevice() {
     UDPHandler.eventsStream.listen((event) {
@@ -40,6 +43,7 @@ class _graphViewState extends State<graphView> {
       if (this.mounted) {
         setState(() {
           DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+          SPDeviceList.add(jsonEncode(newDeviceModel.mapModel()));
         });
       }
     });
@@ -280,6 +284,20 @@ class _graphViewState extends State<graphView> {
           name: 'KW',
           markerSettings: const MarkerSettings(isVisible: false)),
     ];
+  }
+
+  //define var for stop  loop
+  bool buildLock = false;
+  // define function save to preferences
+  void SavePreferences(String key, List<String> payload) async {
+    //
+    if (buildLock == false) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      if (payload.isNotEmpty) {
+        await prefs.setStringList(key, payload);
+        buildLock = true;
+      }
+    }
   }
 
   // func getting log from local database
@@ -1123,6 +1141,7 @@ class _graphViewState extends State<graphView> {
 
   @override
   Widget build(BuildContext context) {
+    SavePreferences("DeviceNameList", SPDeviceList.toList());
     return DefaultTabController(
         length: 4,
         child: DeviceList.isEmpty
@@ -1319,19 +1338,18 @@ class _graphViewState extends State<graphView> {
                                     Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder:
-                                                (context) => chartLog(
-                                              DeviceSelected:
-                                              selectDevice,
-                                              DeviceSelectedName:
-                                              selectDeviceId.toString().split("-").last,
-                                              startTime:
-                                              dateTimeList?[0]
-                                                  .toIso8601String(),
-                                              endTime: dateTimeList?[
-                                              1]
-                                                  .toIso8601String(),
-                                            )));
+                                            builder: (context) => chartLog(
+                                                  DeviceSelected: selectDevice,
+                                                  DeviceSelectedName:
+                                                      selectDeviceId
+                                                          .toString()
+                                                          .split("-")
+                                                          .last,
+                                                  startTime: dateTimeList?[0]
+                                                      .toIso8601String(),
+                                                  endTime: dateTimeList?[1]
+                                                      .toIso8601String(),
+                                                )));
                                   },
                                   icon: Icon(Icons.date_range)))
                           : Card()

@@ -6,6 +6,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../UDP/UDP.dart';
 import '../../model/DeviceId.dart';
@@ -40,6 +41,8 @@ class _tableViewState extends State<tableView> {
   ];
   // define set for getting current device
   Set<dynamic> DeviceList = {};
+  // define List for Saving DeviceList
+  Set<String> SPDeviceList = {};
   // define list for getting DeviceDataList
   List<dynamic> DeviceDataList = [];
 
@@ -250,6 +253,29 @@ class _tableViewState extends State<tableView> {
     }
   }
 
+  //define var for stop  loop
+  bool buildLock = false;
+  // define function save to preferences
+  void SavePreferences(String key, List<String> payload) async {
+    //
+    if(buildLock == false) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      if(payload.isNotEmpty){
+        await prefs.setStringList(key, payload);
+        buildLock = true;
+      }
+    }
+  }
+
+  // define function save to preferences
+  GetPreferences(String key) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Try reading data from the 'items' key. If it doesn't exist, returns null.
+    final List<String>? items = prefs.getStringList(key);
+    return items;
+  }
+
   void getDevice() {
     UDPHandler.eventsStream.listen((event) {
       var decodeEvent = jsonDecode(event);
@@ -258,6 +284,7 @@ class _tableViewState extends State<tableView> {
       if (this.mounted) {
         setState(() {
           DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+          SPDeviceList.add(jsonEncode(newDeviceModel.mapModel()));
         });
       }
     });
@@ -325,377 +352,377 @@ class _tableViewState extends State<tableView> {
 
   @override
   Widget build(BuildContext context) {
+    SavePreferences("DeviceNameList", SPDeviceList.toList());
     return DeviceList.isEmpty
         ? Center(
             child: WaitTimeCountDeviceList(),
           )
         : Column(
-      children: [
-        Align(
-          alignment: Alignment.center,
-          child: SizedBox(
-            width: 200,
-            child: DropdownButtonFormField2<String>(
-              isExpanded: true,
-              decoration: InputDecoration(
-                // Add Horizontal padding using menuItemStyleData.padding so it matches
-                // the menu padding when button's width is not specified.
-                contentPadding:
-                const EdgeInsets.symmetric(vertical: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                // Add more decoration..
-              ),
-              hint: const Text(
-                'Select MSD Device',
-                style: TextStyle(fontSize: 14),
-              ),
-              items:
-              DeviceList.map((item) => DropdownMenuItem<String>(
-                value: item.toString(),
-                child: Text(
-                  jsonDecode(item)["DeviceName"],
-                  style: const TextStyle(
-                    fontSize: 14,
-                  ),
-                ),
-              )).toList(),
-              validator: (value) {
-                if (value == null) {
-                  return 'Please select MSD Device.';
-                }
-                return null;
-              },
-              onChanged: (value) {
-                //Do something when selected item is changed.
-                setState(() {
-                  selectDevice = value;
-                });
-              },
-              onSaved: (value) {
-                // selectedValue = value.toString();
-              },
-              buttonStyleData: const ButtonStyleData(
-                padding: EdgeInsets.only(right: 8),
-              ),
-              iconStyleData: const IconStyleData(
-                icon: Icon(
-                  Icons.arrow_drop_down,
-                  color: Colors.black45,
-                ),
-                iconSize: 24,
-              ),
-              dropdownStyleData: DropdownStyleData(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-              menuItemStyleData: const MenuItemStyleData(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-              ),
-            ),
-          ),
-        ),
-        Expanded(child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: DataTable2(
-              columnSpacing: 0,
-              horizontalMargin: 0,
-              minWidth: 0,
-              dataRowHeight: 30,
-              headingRowColor:
-              MaterialStatePropertyAll(Colors.grey.shade300),
-              border: TableBorder.all(color: Colors.black26),
-              fixedTopRows: 1,
-              fixedLeftColumns: 1,
-              fixedColumnsColor: Colors.grey.shade300,
-              columns: [
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: Text('ID',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
+            children: [
+              Align(
+                alignment: Alignment.center,
+                child: SizedBox(
+                  width: 200,
+                  child: DropdownButtonFormField2<String>(
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      // Add Horizontal padding using menuItemStyleData.padding so it matches
+                      // the menu padding when button's width is not specified.
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      // Add more decoration..
                     ),
-                    size: ColumnSize.S),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: Text('NAME',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
+                    hint: const Text(
+                      'Select MSD Device',
+                      style: TextStyle(fontSize: 14),
                     ),
-                    size: ColumnSize.L),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: Text('STATUS',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
+                    items: DeviceList.map((item) => DropdownMenuItem<String>(
+                          value: item.toString(),
+                          child: Text(
+                            jsonDecode(item)["DeviceName"],
+                            style: const TextStyle(
+                              fontSize: 14,
+                            ),
+                          ),
+                        )).toList(),
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Please select MSD Device.';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      //Do something when selected item is changed.
+                      setState(() {
+                        selectDevice = value;
+                      });
+                    },
+                    onSaved: (value) {
+                      // selectedValue = value.toString();
+                    },
+                    buttonStyleData: const ButtonStyleData(
+                      padding: EdgeInsets.only(right: 8),
                     ),
-                    size: ColumnSize.L),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: Text('TH(%)',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
+                    iconStyleData: const IconStyleData(
+                      icon: Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.black45,
+                      ),
+                      iconSize: 24,
                     ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: RichText(
-                          text: TextSpan(children: [
-                            TextSpan(
-                                text: 'I',
-                                style: GoogleFonts.robotoMono(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold)),
-                            WidgetSpan(
-                              child: Transform.translate(
-                                offset: const Offset(2, 7),
-                                child: Text(
-                                  'R',
-                                  //superscript is usually smaller in size
-                                  //textScaleFactor: 0.7,
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            )
-                          ])),
+                    dropdownStyleData: DropdownStyleData(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                     ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: RichText(
-                          text: TextSpan(children: [
-                            TextSpan(
-                                text: 'I',
-                                style: GoogleFonts.robotoMono(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold)),
-                            WidgetSpan(
-                              child: Transform.translate(
-                                offset: const Offset(2, 7),
-                                child: Text(
-                                  'Y',
-                                  //superscript is usually smaller in size
-                                  //textScaleFactor: 0.7,
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            )
-                          ])),
+                    menuItemStyleData: const MenuItemStyleData(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: RichText(
-                          text: TextSpan(children: [
-                            TextSpan(
-                                text: 'I',
-                                style: GoogleFonts.robotoMono(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold)),
-                            WidgetSpan(
-                              child: Transform.translate(
-                                offset: const Offset(2, 7),
-                                child: Text(
-                                  'B',
-                                  //superscript is usually smaller in size
-                                  //textScaleFactor: 0.7,
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            )
-                          ])),
-                    ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: RichText(
-                          text: TextSpan(children: [
-                            TextSpan(
-                                text: 'V',
-                                style: GoogleFonts.robotoMono(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FontStyle.italic)),
-                            WidgetSpan(
-                              child: Transform.translate(
-                                offset: const Offset(2, 7),
-                                child: Text(
-                                  'RY',
-                                  //superscript is usually smaller in size
-                                  //textScaleFactor: 0.7,
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            )
-                          ])),
-                    ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: RichText(
-                          text: TextSpan(children: [
-                            TextSpan(
-                                text: 'V',
-                                style: GoogleFonts.robotoMono(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FontStyle.italic)),
-                            WidgetSpan(
-                              child: Transform.translate(
-                                offset: const Offset(2, 7),
-                                child: Text(
-                                  'YB',
-                                  //superscript is usually smaller in size
-                                  //textScaleFactor: 0.7,
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            )
-                          ])),
-                    ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: RichText(
-                          text: TextSpan(children: [
-                            TextSpan(
-                                text: 'V',
-                                style: GoogleFonts.robotoMono(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FontStyle.italic)),
-                            WidgetSpan(
-                              child: Transform.translate(
-                                offset: const Offset(2, 7),
-                                child: Text(
-                                  'BR',
-                                  //superscript is usually smaller in size
-                                  //textScaleFactor: 0.7,
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            )
-                          ])),
-                    ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: Text('kW',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
-                    ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: Text('kWh',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
-                    ),
-                    size: ColumnSize.L),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: Text('PF',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
-                    ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: RichText(
-                          text: TextSpan(children: [
-                            TextSpan(
-                                text: 'I',
-                                style: GoogleFonts.robotoMono(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold)),
-                            WidgetSpan(
-                              child: Transform.translate(
-                                offset: const Offset(2, 7),
-                                child: Text(
-                                  'E',
-                                  //superscript is usually smaller in size
-                                  //textScaleFactor: 0.7,
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            )
-                          ])),
-                    ),
-                    size: ColumnSize.M),
-                DataColumn2(
-                    label: Align(
-                      alignment: Alignment.center,
-                      child: Text('OL-P',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
-                    ),
-                    size: ColumnSize.M),
-              ],
-              empty: Container(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),
-                      Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Text("FATCHING DATA"),
-                      )
-                    ],
                   ),
                 ),
               ),
-              rows: getElemantTable(),
-            )))
-      ],
-    );
+              Expanded(
+                  child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: DataTable2(
+                        columnSpacing: 0,
+                        horizontalMargin: 0,
+                        minWidth: 0,
+                        dataRowHeight: 30,
+                        headingRowColor:
+                            MaterialStatePropertyAll(Colors.grey.shade300),
+                        border: TableBorder.all(color: Colors.black26),
+                        fixedTopRows: 1,
+                        fixedLeftColumns: 1,
+                        fixedColumnsColor: Colors.grey.shade300,
+                        columns: [
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text('ID',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              size: ColumnSize.S),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text('NAME',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              size: ColumnSize.L),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text('STATUS',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              size: ColumnSize.L),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text('TH(%)',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: RichText(
+                                    text: TextSpan(children: [
+                                  TextSpan(
+                                      text: 'I',
+                                      style: GoogleFonts.robotoMono(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold)),
+                                  WidgetSpan(
+                                    child: Transform.translate(
+                                      offset: const Offset(2, 7),
+                                      child: Text(
+                                        'R',
+                                        //superscript is usually smaller in size
+                                        //textScaleFactor: 0.7,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )
+                                ])),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: RichText(
+                                    text: TextSpan(children: [
+                                  TextSpan(
+                                      text: 'I',
+                                      style: GoogleFonts.robotoMono(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold)),
+                                  WidgetSpan(
+                                    child: Transform.translate(
+                                      offset: const Offset(2, 7),
+                                      child: Text(
+                                        'Y',
+                                        //superscript is usually smaller in size
+                                        //textScaleFactor: 0.7,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )
+                                ])),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: RichText(
+                                    text: TextSpan(children: [
+                                  TextSpan(
+                                      text: 'I',
+                                      style: GoogleFonts.robotoMono(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold)),
+                                  WidgetSpan(
+                                    child: Transform.translate(
+                                      offset: const Offset(2, 7),
+                                      child: Text(
+                                        'B',
+                                        //superscript is usually smaller in size
+                                        //textScaleFactor: 0.7,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )
+                                ])),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: RichText(
+                                    text: TextSpan(children: [
+                                  TextSpan(
+                                      text: 'V',
+                                      style: GoogleFonts.robotoMono(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontStyle: FontStyle.italic)),
+                                  WidgetSpan(
+                                    child: Transform.translate(
+                                      offset: const Offset(2, 7),
+                                      child: Text(
+                                        'RY',
+                                        //superscript is usually smaller in size
+                                        //textScaleFactor: 0.7,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )
+                                ])),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: RichText(
+                                    text: TextSpan(children: [
+                                  TextSpan(
+                                      text: 'V',
+                                      style: GoogleFonts.robotoMono(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontStyle: FontStyle.italic)),
+                                  WidgetSpan(
+                                    child: Transform.translate(
+                                      offset: const Offset(2, 7),
+                                      child: Text(
+                                        'YB',
+                                        //superscript is usually smaller in size
+                                        //textScaleFactor: 0.7,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )
+                                ])),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: RichText(
+                                    text: TextSpan(children: [
+                                  TextSpan(
+                                      text: 'V',
+                                      style: GoogleFonts.robotoMono(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontStyle: FontStyle.italic)),
+                                  WidgetSpan(
+                                    child: Transform.translate(
+                                      offset: const Offset(2, 7),
+                                      child: Text(
+                                        'BR',
+                                        //superscript is usually smaller in size
+                                        //textScaleFactor: 0.7,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )
+                                ])),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text('kW',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text('kWh',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              size: ColumnSize.L),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text('PF',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: RichText(
+                                    text: TextSpan(children: [
+                                  TextSpan(
+                                      text: 'I',
+                                      style: GoogleFonts.robotoMono(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold)),
+                                  WidgetSpan(
+                                    child: Transform.translate(
+                                      offset: const Offset(2, 7),
+                                      child: Text(
+                                        'E',
+                                        //superscript is usually smaller in size
+                                        //textScaleFactor: 0.7,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )
+                                ])),
+                              ),
+                              size: ColumnSize.M),
+                          DataColumn2(
+                              label: Align(
+                                alignment: Alignment.center,
+                                child: Text('OL-P',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              size: ColumnSize.M),
+                        ],
+                        empty: Container(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(),
+                                Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Text("FATCHING DATA"),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        rows: getElemantTable(),
+                      )))
+            ],
+          );
   }
 }
