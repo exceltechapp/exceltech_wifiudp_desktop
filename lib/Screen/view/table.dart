@@ -363,7 +363,7 @@ class _tableViewState extends State<tableView> {
   }
   @override
   Widget build(BuildContext context) {
-    TimerDeviceOfflineSate = Timer.periodic(Duration(minutes: 1), (Timer t){
+    TimerDeviceOfflineSate = Timer.periodic(Duration(minutes: 2), (Timer t){
       if(this.mounted){
         setState(() {
           DeviceDataList.clear();
