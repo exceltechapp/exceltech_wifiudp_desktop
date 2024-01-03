@@ -39,6 +39,9 @@ class _tableViewState extends State<tableView> {
     "Pre-overload", //16
     "High voltage Alarm & Pre-overload Alarm", //17
   ];
+  // define bool for getting device OFFLINE OR ONLINE
+  bool device_offline_sate = false;
+  Timer? TimerDeviceOfflineSate;
   // define set for getting current device
   Set<dynamic> DeviceList = {};
   // define List for Saving DeviceList
@@ -60,10 +63,14 @@ class _tableViewState extends State<tableView> {
           if (DecodeEvent["DEN"] == MapModelDecode["DeviceName"] &&
               DecodeEvent["MAC"] == MapModelDecode["DeviceMac"]) {
             var id = DecodeEvent["ID"];
+            if(id == 31 || id == 32){
+              print(DecodeEvent);
+            }
             DeviceJson newData = DeviceJson.fromJson(DecodeEvent);
             if (this.mounted) {
               setState(() {
                 DeviceDataList[id - 1] = newData;
+                TimerDeviceOfflineSate?.cancel();
               });
             }
           }
@@ -349,9 +356,22 @@ class _tableViewState extends State<tableView> {
     getDevice();
     super.initState();
   }
-
+@override
+  void dispose() {
+    TimerDeviceOfflineSate?.cancel();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
+    TimerDeviceOfflineSate = Timer.periodic(Duration(minutes: 1), (Timer t){
+      if(this.mounted){
+        setState(() {
+          DeviceDataList.clear();
+          DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
+              32, (index) => DeviceJson(ID: index + 1)));
+        });
+      }
+    });
     SavePreferences("DeviceNameList", SPDeviceList.toList());
     return DeviceList.isEmpty
         ? Center(

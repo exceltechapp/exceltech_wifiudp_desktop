@@ -1,33 +1,33 @@
 class DeviceJson {
-  int? ID;
-  int? MODEL;
-  int? TH;
-  int? IR;
-  int? IY;
-  int? IB;
-  int? VRN;
-  int? VYN;
-  int? VBN;
-  int? VRY;
-  int? VYB;
-  int? VBR;
-  int? IE;
-  int? PF;
-  int? KW;
-  int? KWH;
-  int? KVA;
-  int? KVAH;
-  int? KVAR;
-  int? KVARH;
-  int? HZ;
-  int? STATUS;
-  int? OLSV;
-  int? ERROR;
+  dynamic? ID;
+  dynamic? MODEL;
+  dynamic? TH;
+  dynamic? IR;
+  dynamic? IY;
+  dynamic? IB;
+  dynamic? VRN;
+  dynamic? VYN;
+  dynamic? VBN;
+  dynamic? VRY;
+  dynamic? VYB;
+  dynamic? VBR;
+  dynamic? IE;
+  dynamic? PF;
+  dynamic? KW;
+  dynamic? KWH;
+  dynamic? KVA;
+  dynamic? KVAH;
+  dynamic? KVAR;
+  dynamic? KVARH;
+  dynamic? HZ;
+  dynamic? STATUS;
+  dynamic? OLSV;
+  dynamic? ERROR;
   DateTime? RTC;
   String? MAC;
   String? DEN;
   String? IDN;
-  int? SIZE;
+  dynamic? SIZE;
 
   DeviceJson({
     this.ID,

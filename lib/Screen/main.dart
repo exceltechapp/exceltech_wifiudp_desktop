@@ -102,7 +102,7 @@ class _mainScreenState extends State<mainScreen> {
                           thickness: 1.3,
                           color: Color.fromRGBO(255, 255, 255, 1),
                         ),
-                        Card(
+                        /*Card(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(50)),
                           color: SwitchViewIndex == 1
@@ -125,7 +125,7 @@ class _mainScreenState extends State<mainScreen> {
                           indent: 16,
                           thickness: 1.3,
                           color: Color.fromRGBO(255, 255, 255, 1),
-                        ),
+                        ),*/
                         Card(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(50)),
