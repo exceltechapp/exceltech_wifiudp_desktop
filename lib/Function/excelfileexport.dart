@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 
 import '../Database/LogModel.dart';
@@ -64,47 +65,50 @@ class ExcelFile {
     sheet1.getRangeByName('A7').setText('No');
     sheet1.getRangeByName('A7').columnWidth = 5;
 
-    sheet1.getRangeByName('B7').setText('Date-Time');
+    sheet1.getRangeByName('B7').setText('Date');
     sheet1.getRangeByName('B7').autoFit();
 
-    sheet1.getRangeByName('C7').setText('Status');
+    sheet1.getRangeByName('C7').setText('Time');
     sheet1.getRangeByName('C7').autoFit();
 
-    sheet1.getRangeByName('D7').setText('TH');
-    sheet1.getRangeByName('D7').columnWidth = 6;
+    sheet1.getRangeByName('D7').setText('Status');
+    sheet1.getRangeByName('D7').columnWidth = 12;
 
-    sheet1.getRangeByName('E7').setText('IR');
+    sheet1.getRangeByName('E7').setText('TH');
     sheet1.getRangeByName('E7').columnWidth = 6;
 
-    sheet1.getRangeByName('F7').setText('IY');
+    sheet1.getRangeByName('F7').setText('IR');
     sheet1.getRangeByName('F7').columnWidth = 6;
 
-    sheet1.getRangeByName('G7').setText('IB');
+    sheet1.getRangeByName('G7').setText('IY');
     sheet1.getRangeByName('G7').columnWidth = 6;
 
-    sheet1.getRangeByName('H7').setText('VRY');
+    sheet1.getRangeByName('H7').setText('IB');
     sheet1.getRangeByName('H7').columnWidth = 6;
 
-    sheet1.getRangeByName('I7').setText('VYB');
+    sheet1.getRangeByName('I7').setText('VRY');
     sheet1.getRangeByName('I7').columnWidth = 6;
 
-    sheet1.getRangeByName('J7').setText('VBR');
+    sheet1.getRangeByName('J7').setText('VYB');
     sheet1.getRangeByName('J7').columnWidth = 6;
 
-    sheet1.getRangeByName('K7').setText('kW');
+    sheet1.getRangeByName('K7').setText('VBR');
     sheet1.getRangeByName('K7').columnWidth = 6;
 
-    sheet1.getRangeByName('L7').setText('kWh');
-    sheet1.getRangeByName('L7').columnWidth = 8;
+    sheet1.getRangeByName('L7').setText('kW');
+    sheet1.getRangeByName('L7').columnWidth = 6;
 
-    sheet1.getRangeByName('M7').setText('PF');
-    sheet1.getRangeByName('M7').columnWidth = 6;
+    sheet1.getRangeByName('M7').setText('kWh');
+    sheet1.getRangeByName('M7').columnWidth = 8;
 
-    sheet1.getRangeByName('N7').setText('IE');
+    sheet1.getRangeByName('N7').setText('PF');
     sheet1.getRangeByName('N7').columnWidth = 6;
 
-    sheet1.getRangeByName('O7').setText('OL-P');
+    sheet1.getRangeByName('O7').setText('IE');
     sheet1.getRangeByName('O7').columnWidth = 6;
+
+    sheet1.getRangeByName('P7').setText('OL-P');
+    sheet1.getRangeByName('P7').columnWidth = 6;
     var length = newObjectDataList.length;
     newObjectDataList.forEach((element) {
       ExcelFileModel newModel = element;
@@ -121,64 +125,82 @@ class ExcelFile {
                 newModel.x.hour,
                 newModel.x.minute,
                 newModel.x.second)
-            .toString());
+            .toIso8601String().split("T").first);
         sheet1.getRangeByName('B${index + 8}').autoFit();
+
+        sheet1.getRangeByName('C${index + 8}').setText(DateTime(
+            newModel.x.year,
+            newModel.x.month,
+            newModel.x.day,
+            newModel.x.hour,
+            newModel.x.minute,
+            newModel.x.second)
+            .toIso8601String().split("T").last.split(".").first);
+        sheet1.getRangeByName('C${index + 8}').autoFit();
 
         sheet1
             .getRangeByName('D${index + 8}')
-            .setText("${newModel.y["TH"] ?? '-'}%");
-        sheet1.getRangeByName('D${index + 8}').autoFit();
+            .setText("${newModel.y["ERROR"] != 255 ? condition[newModel.y["STATUS"]] ?? "-":"DISCONNECT"}");
+        //sheet1.getRangeByName('D${index + 8}').autoFit();
+        sheet1
+            .getRangeByName('D${index + 8}').cellStyle.backColorRgb = newModel.y["ERROR"] != 255 ? newModel.y["STATUS"] == 0 ? Color.fromARGB(255, 67, 233, 123) : Color.fromARGB(255, 255, 105, 124) : Color.fromARGB(255, 255, 255, 255);
 
         sheet1
             .getRangeByName('E${index + 8}')
+            .setText("${newModel.y["TH"] ?? '-'}%");
+        //sheet1.getRangeByName('E${index + 8}').autoFit();
+
+
+        sheet1
+            .getRangeByName('F${index + 8}')
             .setText("${newModel.y["IR"] ?? '-'}");
         //sheet1.getRangeByName('E${index + 2}').autoFit();
 
         sheet1
-            .getRangeByName('F${index + 8}')
+            .getRangeByName('G${index + 8}')
             .setText("${newModel.y["IY"] ?? '-'}");
         //sheet1.getRangeByName('F${index + 2}').autoFit();
 
         sheet1
-            .getRangeByName('G${index + 8}')
+            .getRangeByName('H${index + 8}')
             .setText("${newModel.y["IB"] ?? '-'}");
         //sheet1.getRangeByName('G${index + 2}').autoFit();
 
         sheet1
-            .getRangeByName('H${index + 8}')
+            .getRangeByName('I${index + 8}')
             .setText("${newModel.y["VRY"] ?? '-'}");
         //sheet1.getRangeByName('H${index + 2}').autoFit();
 
         sheet1
-            .getRangeByName('I${index + 8}')
+            .getRangeByName('J${index + 8}')
             .setText("${newModel.y["VYB"] ?? '-'}");
         //sheet1.getRangeByName('I${index + 2}').autoFit();
 
         sheet1
-            .getRangeByName('J${index + 8}')
+            .getRangeByName('K${index + 8}')
             .setText("${newModel.y["VBR"] ?? '-'}");
         //sheet1.getRangeByName('J${index + 2}').autoFit();
 
         sheet1
-            .getRangeByName('K${index + 8}')
+            .getRangeByName('L${index + 8}')
             .setText("${newModel.y["KW"] ?? '-'}");
         //sheet1.getRangeByName('K${index + 2}').autoFit();
 
         sheet1
-            .getRangeByName('L${index + 8}')
+            .getRangeByName('M${index + 8}')
             .setText("${newModel.y["KWH"] ?? '-'}");
         //sheet1.getRangeByName('L${index + 2}').autoFit();
 
         sheet1
-            .getRangeByName('M${index + 8}')
+            .getRangeByName('N${index + 8}')
             .setText("${newModel.y["PF"] ?? '-'}");
         //sheet1.getRangeByName('M${index + 2}').autoFit();
         sheet1
-            .getRangeByName('N${index + 8}')
+            .getRangeByName('O${index + 8}')
             .setText("${newModel.y["IE"] ?? '-'}");
         //sheet1.getRangeByName('N${index + 2}').autoFit();
         sheet1
-            .getRangeByName('O${index + 8}')
+            .getRangeByName('P${index + 8}')
             .setText("${newModel.y["OLSV"] ?? '-'}");
         //sheet1.getRangeByName('O${index + 2}').autoFit();
       }
