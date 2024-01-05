@@ -481,7 +481,7 @@ class _logViewState extends State<logView> {
               empty: Container(
                 child: Align(
                   alignment: Alignment.center,
-                  child: Text("NO DATA"),
+                  child: Text("SELECT DATE & TIME"),
                 ),
               ),
               rows: newObjectDataList.toList().map((elemant) {
@@ -670,6 +670,8 @@ class _logViewState extends State<logView> {
                             onChanged: (value) {
                               //Do something when selected item is changed.
                               setState(() {
+                                //DeviceDataList.clear();
+                                newObjectDataList.clear();
                                 selectDevice = value;
                               });
                             },
@@ -738,7 +740,8 @@ class _logViewState extends State<logView> {
                                       //Do something when selected item is changed.
                                       setState(() {
                                         //selectDevice = value;
-                                        //newObjectDataList.clear();
+                                        newObjectDataList.clear();
+                                        //DeviceDataList.clear();
                                         selectDeviceId = value;
                                       });
                                     },
@@ -843,9 +846,16 @@ class _logViewState extends State<logView> {
                   selectDevice != null && selectDeviceId != null
                       ? showTable()
                       : Expanded(
-                          child: Center(
-                          child: CircularProgressIndicator(),
-                        ))
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              CircularProgressIndicator(),
+                              DeviceList.isNotEmpty && selectDevice == null? Padding(padding: EdgeInsets.all(20),child: Text("SELECT MSD DEVICE"),):Container(),
+                              selectDevice != null && selectDeviceId == null? Padding(padding: EdgeInsets.all(20),child: Text("SELECT ID"),) : Container()
+                            ],
+                          ))
                 ],
               ));
   }

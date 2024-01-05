@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 
@@ -69,8 +70,8 @@ class _tableViewState extends State<tableView> {
             DeviceJson newData = DeviceJson.fromJson(DecodeEvent);
             if (this.mounted) {
               setState(() {
-                DeviceDataList[id - 1] = newData;
                 TimerDeviceOfflineSate?.cancel();
+                DeviceDataList[id - 1] = newData;
               });
             }
           }
@@ -292,6 +293,9 @@ class _tableViewState extends State<tableView> {
         setState(() {
           DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
           SPDeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+          if(DeviceList.isNotEmpty){
+            selectDevice = DeviceList.first;
+          }
         });
       }
     });
@@ -363,14 +367,15 @@ class _tableViewState extends State<tableView> {
   }
   @override
   Widget build(BuildContext context) {
-    TimerDeviceOfflineSate = Timer.periodic(Duration(minutes: 2), (Timer t){
+    TimerDeviceOfflineSate = Timer.periodic(Duration(minutes: 3), (Timer t){
       if(this.mounted){
         setState(() {
-          DeviceDataList.clear();
-          DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
-              32, (index) => DeviceJson(ID: index + 1)));
+          //DeviceDataList.clear();
+         /* DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
+              32, (index) => DeviceJson(ID: index + 1)));*/
         });
       }
+      TimerDeviceOfflineSate?.cancel();
     });
     SavePreferences("DeviceNameList", SPDeviceList.toList());
     return DeviceList.isEmpty
@@ -386,27 +391,26 @@ class _tableViewState extends State<tableView> {
                   child: DropdownButtonFormField2<String>(
                     isExpanded: true,
                     decoration: InputDecoration(
-                      // Add Horizontal padding using menuItemStyleData.padding so it matches
-                      // the menu padding when button's width is not specified.
                       contentPadding: const EdgeInsets.symmetric(vertical: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
                       // Add more decoration..
                     ),
+                    //value: jsonDecode(selectDevice) == null ? "" : jsonDecode(selectDevice).toString(),
                     hint: const Text(
                       'Select MSD Device',
                       style: TextStyle(fontSize: 14),
                     ),
                     items: DeviceList.map((item) => DropdownMenuItem<String>(
-                          value: item.toString(),
-                          child: Text(
-                            jsonDecode(item)["DeviceName"],
-                            style: const TextStyle(
-                              fontSize: 14,
-                            ),
-                          ),
-                        )).toList(),
+                      value: item.toString(),
+                      child: Text(
+                        jsonDecode(item)["DeviceName"],
+                        style: const TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                    )).toSet().toList(), // Use toSet() to remove duplicates and then convert back to a list
                     validator: (value) {
                       if (value == null) {
                         return 'Please select MSD Device.';
@@ -414,8 +418,10 @@ class _tableViewState extends State<tableView> {
                       return null;
                     },
                     onChanged: (value) {
-                      //Do something when selected item is changed.
                       setState(() {
+                        DeviceDataList.clear();
+                        DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
+                            32, (index) => DeviceJson(ID: index + 1)));
                         selectDevice = value;
                       });
                     },
