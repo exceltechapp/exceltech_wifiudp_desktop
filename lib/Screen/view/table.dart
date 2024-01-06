@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 
@@ -21,7 +20,7 @@ class tableView extends StatefulWidget {
 
 class _tableViewState extends State<tableView> {
   var condition = [
-    "Healthy", //0
+    "CONNECTED", //0
     "Single Phasing", //1
     "Unbalance", //2
     "Under current", //3
@@ -54,31 +53,58 @@ class _tableViewState extends State<tableView> {
   var selectDevice;
 
   bool WaitTimeCountDeviceListBool = false;
+  bool DataRev = false;
+  int LOCKClear = 3;
 
   getElemantTable() {
     if (selectDevice != null) {
-      var MapModelDecode = jsonDecode(selectDevice);
+      var mac = jsonDecode(selectDevice)["DeviceMac"];
+      TimerDeviceOfflineSate = Timer(Duration(minutes: 2), () {
+        print("Timer called");
+        if(DataRev == true){
+          TimerDeviceOfflineSate?.cancel();
+        }
+        // Clear DeviceData after 3 minutes if no data received within that period
+        if (this.mounted && DataRev == false && LOCKClear == 1) {
+          setState(() {
+            print("Function called for rest");
+            // Reset the flag for the next cycle
+            DataRev = false;
+            LOCKClear = 0;
+            DeviceDataList.clear();
+            DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
+                32, (index) => DeviceJson(ID: index + 1)));
+            TimerDeviceOfflineSate?.cancel();
+          });
+        }
+      });
       UDPHandler.eventsStream.listen((event) {
-        var DecodeEvent = jsonDecode(event);
-        if (DecodeEvent["DEN"] != null && DecodeEvent["MAC"] != null) {
-          if (DecodeEvent["DEN"] == MapModelDecode["DeviceName"] &&
-              DecodeEvent["MAC"] == MapModelDecode["DeviceMac"]) {
-            var id = DecodeEvent["ID"];
-            if(id == 31 || id == 32){
-              print(DecodeEvent);
-            }
-            DeviceJson newData = DeviceJson.fromJson(DecodeEvent);
-            if (this.mounted) {
-              setState(() {
-                TimerDeviceOfflineSate?.cancel();
-                DeviceDataList[id - 1] = newData;
-              });
-            }
+        var liveMac = jsonDecode(event)["MAC"];
+        if (liveMac == mac &&
+            jsonDecode(selectDevice)["DeviceName"] ==
+                jsonDecode(event)["DEN"]) {
+          if (this.mounted) {
+            setState(() {
+              //TimerDeviceOfflineSate?.cancel();
+              TimerDeviceOfflineSate?.cancel();
+              DataRev = true;
+              LOCKClear = 0;
+              var id = jsonDecode(event)["ID"];
+              DeviceJson newData = DeviceJson.fromJson(jsonDecode(event));
+              DeviceDataList[id - 1] = newData;
+            });
+          }
+        }else{
+          if(this.mounted){
+            setState(() {
+              TimerDeviceOfflineSate?.cancel();
+              DataRev = false;
+              LOCKClear = 1;
+            });
           }
         }
       });
       return DeviceDataList.toList().map((e1) {
-        //int index = DeviceList.indexOf(e);
         DeviceJson dataClass = e1;
         var e = dataClass.toJson();
         return DataRow(cells: [
@@ -105,7 +131,7 @@ class _tableViewState extends State<tableView> {
                     ? Text(
                         "${condition[e["STATUS"] >= condition.length ? 0 : e["STATUS"]] ?? "-"}",
                         style: TextStyle(overflow: TextOverflow.ellipsis))
-                    : Text("-")),
+                    : Text("DISCONNECT")),
           )),
           DataCell(Align(
               alignment: Alignment.center,
@@ -266,10 +292,10 @@ class _tableViewState extends State<tableView> {
   // define function save to preferences
   void SavePreferences(String key, List<String> payload) async {
     //
-    if(buildLock == false) {
+    if (buildLock == false) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      if(payload.isNotEmpty){
+      if (payload.isNotEmpty) {
         await prefs.setStringList(key, payload);
         buildLock = true;
       }
@@ -293,8 +319,8 @@ class _tableViewState extends State<tableView> {
         setState(() {
           DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
           SPDeviceList.add(jsonEncode(newDeviceModel.mapModel()));
-          if(DeviceList.isNotEmpty){
-            selectDevice = DeviceList.first;
+          if (DeviceList.isNotEmpty) {
+            //selectDevice = DeviceList.first;
           }
         });
       }
@@ -360,23 +386,15 @@ class _tableViewState extends State<tableView> {
     getDevice();
     super.initState();
   }
-@override
+
+  @override
   void dispose() {
     TimerDeviceOfflineSate?.cancel();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
-    TimerDeviceOfflineSate = Timer.periodic(Duration(minutes: 3), (Timer t){
-      if(this.mounted){
-        setState(() {
-          //DeviceDataList.clear();
-         /* DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
-              32, (index) => DeviceJson(ID: index + 1)));*/
-        });
-      }
-      TimerDeviceOfflineSate?.cancel();
-    });
     SavePreferences("DeviceNameList", SPDeviceList.toList());
     return DeviceList.isEmpty
         ? Center(
@@ -403,14 +421,16 @@ class _tableViewState extends State<tableView> {
                       style: TextStyle(fontSize: 14),
                     ),
                     items: DeviceList.map((item) => DropdownMenuItem<String>(
-                      value: item.toString(),
-                      child: Text(
-                        jsonDecode(item)["DeviceName"],
-                        style: const TextStyle(
-                          fontSize: 14,
-                        ),
-                      ),
-                    )).toSet().toList(), // Use toSet() to remove duplicates and then convert back to a list
+                              value: item.toString(),
+                              child: Text(
+                                jsonDecode(item)["DeviceName"],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ))
+                        .toSet()
+                        .toList(), // Use toSet() to remove duplicates and then convert back to a list
                     validator: (value) {
                       if (value == null) {
                         return 'Please select MSD Device.';
@@ -420,13 +440,15 @@ class _tableViewState extends State<tableView> {
                     onChanged: (value) {
                       setState(() {
                         DeviceDataList.clear();
-                        DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
-                            32, (index) => DeviceJson(ID: index + 1)));
+                        DeviceDataList = List<DeviceJson>.from(
+                            List<DeviceJson>.generate(
+                                32, (index) => DeviceJson(ID: index + 1)));
                         selectDevice = value;
+                        print(value);
                       });
                     },
                     onSaved: (value) {
-                      // selectedValue = value.toString();
+                      selectDevice = value;
                     },
                     buttonStyleData: const ButtonStyleData(
                       padding: EdgeInsets.only(right: 8),
@@ -737,11 +759,18 @@ class _tableViewState extends State<tableView> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                CircularProgressIndicator(),
-                                Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: Text("FATCHING DATA"),
-                                )
+                                DeviceList.isEmpty
+                                    ? CircularProgressIndicator()
+                                    : Container(),
+                                DeviceList.isNotEmpty
+                                    ? Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Text("SELECT MSD DEVICE"),
+                                      )
+                                    : Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Text("NO DATA"),
+                                      )
                               ],
                             ),
                           ),

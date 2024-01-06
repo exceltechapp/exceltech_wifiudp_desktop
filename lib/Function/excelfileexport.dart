@@ -9,7 +9,7 @@ import 'FileSave.dart';
 
 class ExcelFile {
   var condition = [
-    "Healthy", //0
+    "CONNECTED", //0
     "Single Phasing", //1
     "Unbalance", //2
     "Under current", //3

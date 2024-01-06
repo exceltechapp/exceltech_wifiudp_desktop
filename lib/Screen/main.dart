@@ -10,7 +10,6 @@ import 'package:exceltech_wifiudp/Screen/view/table.dart';
 import 'package:exceltech_wifiudp/model/DeviceId.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../UDP/UDP.dart';
 
@@ -55,13 +54,13 @@ class _mainScreenState extends State<mainScreen> {
     super.initState();
   }
 
-  final Uri _url = Uri.parse('https://www.exceltechindia.com/');
+  //final Uri _url = Uri.parse('https://www.exceltechindia.com/');
 
-  Future<void> _launchUrl() async {
+  /*Future<void> _launchUrl() async {
     if (!await launchUrl(_url)) {
       throw Exception('Could not launch $_url');
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +86,7 @@ class _mainScreenState extends State<mainScreen> {
                           padding: EdgeInsets.all(10),
                           child: InkWell(
                             onTap: (){
-                              _launchUrl();
+                              //_launchUrl();
                             },
                             child: Image.asset("assets/icon.png"),
                           ),

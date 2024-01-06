@@ -25,7 +25,7 @@ class logView extends StatefulWidget {
 
 class _logViewState extends State<logView> {
   var condition = [
-    "Healthy", //0
+    "CONNECTED", //0
     "Single Phasing", //1
     "Unbalance", //2
     "Under current", //3
@@ -519,7 +519,7 @@ class _logViewState extends State<logView> {
                                 "${condition[e["STATUS"] >= condition.length ? 0 : e["STATUS"]] ?? "-"}",
                                 style:
                                     TextStyle(overflow: TextOverflow.ellipsis))
-                            : Text("-")),
+                            : Text("DISCONNECT")),
                   )),
                   DataCell(Align(
                       alignment: Alignment.center,
