@@ -52,58 +52,65 @@ class _tableViewState extends State<tableView> {
   var LockVar = 1;
   var selectDevice;
 
+  // bool used for switch b/w screen when MSD device not found
   bool WaitTimeCountDeviceListBool = false;
-  bool DataRev = false;
-  int LOCKClear = 3;
+  // var used as stroing last datato it
+  var LastData;
+  var DataRev;
+  // define function for init oe clear DeviceDataList that is used for table row
+  void InitDataList() {
+    if (this.mounted) {
+      setState(() {
+        DeviceDataList.clear();
+        DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
+            32, (index) => DeviceJson(ID: index + 1)));
+      });
+    }
+  }
 
+  // define function for get table row elements
   getElemantTable() {
     if (selectDevice != null) {
-      var mac = jsonDecode(selectDevice)["DeviceMac"];
-      TimerDeviceOfflineSate = Timer(Duration(minutes: 2), () {
-        print("Timer called");
-        if(DataRev == true){
-          TimerDeviceOfflineSate?.cancel();
-        }
-        // Clear DeviceData after 3 minutes if no data received within that period
-        if (this.mounted && DataRev == false && LOCKClear == 1) {
+      var data = UDPHandler.eventsStreamJsonDecode;
+      data.asBroadcastStream().listen((event) {
+        if (this.mounted &&
+            event["ID"] != LastData &&
+            event["MAC"] == jsonDecode(selectDevice)["DeviceMac"] &&
+            jsonDecode(selectDevice)["DeviceName"] == event["DEN"]) {
           setState(() {
-            print("Function called for rest");
-            // Reset the flag for the next cycle
-            DataRev = false;
-            LOCKClear = 0;
-            DeviceDataList.clear();
-            DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
-                32, (index) => DeviceJson(ID: index + 1)));
             TimerDeviceOfflineSate?.cancel();
+            DataRev = true;
+            var id = event["ID"];
+            DeviceJson newData = DeviceJson.fromJson(event);
+            DeviceDataList[id - 1] = newData;
+            LastData = event["ID"];
           });
+        } else {
+          print("ELSE FUNCTION CALLED");
+          //initDeviceTimeOut();
+          if (this.mounted) {
+            setState(() {
+              DataRev = false;
+            });
+          }
         }
       });
-      UDPHandler.eventsStream.listen((event) {
+      /*UDPHandler.eventsStream.listen((event) {
         var liveMac = jsonDecode(event)["MAC"];
+        //print(event);
         if (liveMac == mac &&
             jsonDecode(selectDevice)["DeviceName"] ==
                 jsonDecode(event)["DEN"]) {
           if (this.mounted) {
             setState(() {
               //TimerDeviceOfflineSate?.cancel();
-              TimerDeviceOfflineSate?.cancel();
-              DataRev = true;
-              LOCKClear = 0;
               var id = jsonDecode(event)["ID"];
               DeviceJson newData = DeviceJson.fromJson(jsonDecode(event));
               DeviceDataList[id - 1] = newData;
             });
           }
-        }else{
-          if(this.mounted){
-            setState(() {
-              TimerDeviceOfflineSate?.cancel();
-              DataRev = false;
-              LOCKClear = 1;
-            });
-          }
-        }
-      });
+        }else{}
+      });*/
       return DeviceDataList.toList().map((e1) {
         DeviceJson dataClass = e1;
         var e = dataClass.toJson();
@@ -287,22 +294,10 @@ class _tableViewState extends State<tableView> {
     }
   }
 
-  //define var for stop  loop
+  // define var for stop  loop
   bool buildLock = false;
-  // define function save to preferences
-  void SavePreferences(String key, List<String> payload) async {
-    //
-    if (buildLock == false) {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      if (payload.isNotEmpty) {
-        await prefs.setStringList(key, payload);
-        buildLock = true;
-      }
-    }
-  }
-
-  // define function save to preferences
+  // define function get from preferences
   GetPreferences(String key) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     // Try reading data from the 'items' key. If it doesn't exist, returns null.
@@ -310,7 +305,27 @@ class _tableViewState extends State<tableView> {
     return items;
   }
 
+  // define function save to preferences
+  void SavePreferences(String key, List<String> payload) async {
+    if (true) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final List<String>? items = prefs.getStringList(key);
+      var size = items?.length;
+      if (payload.isNotEmpty && size! <= payload.length) {
+        await prefs.setStringList(key, payload);
+        buildLock = true;
+      }
+    }
+  }
+
+  // define function for getting device list
   void getDevice() {
+    if (this.mounted) {
+      setState(() {
+        DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
+            32, (index) => DeviceJson(ID: index + 1)));
+      });
+    }
     UDPHandler.eventsStream.listen((event) {
       var decodeEvent = jsonDecode(event);
       DeviceId newDeviceModel =
@@ -319,20 +334,17 @@ class _tableViewState extends State<tableView> {
         setState(() {
           DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
           SPDeviceList.add(jsonEncode(newDeviceModel.mapModel()));
-          if (DeviceList.isNotEmpty) {
+          if (DeviceList.isNotEmpty && SPDeviceList.isNotEmpty) {
+            print("Deviec Update");
+            SavePreferences("DeviceNameList", SPDeviceList.toList());
             //selectDevice = DeviceList.first;
           }
         });
       }
     });
-    if (this.mounted) {
-      setState(() {
-        DeviceDataList = List<DeviceJson>.from(List<DeviceJson>.generate(
-            32, (index) => DeviceJson(ID: index + 1)));
-      });
-    }
   }
 
+  // define function for MSD Device not wait timer
   WaitTimeCountDeviceList() {
     Timer mytimer = Timer.periodic(Duration(minutes: 1, seconds: 10), (timer) {
       if (this.mounted) {
@@ -395,7 +407,6 @@ class _tableViewState extends State<tableView> {
 
   @override
   Widget build(BuildContext context) {
-    SavePreferences("DeviceNameList", SPDeviceList.toList());
     return DeviceList.isEmpty
         ? Center(
             child: WaitTimeCountDeviceList(),
@@ -439,10 +450,7 @@ class _tableViewState extends State<tableView> {
                     },
                     onChanged: (value) {
                       setState(() {
-                        DeviceDataList.clear();
-                        DeviceDataList = List<DeviceJson>.from(
-                            List<DeviceJson>.generate(
-                                32, (index) => DeviceJson(ID: index + 1)));
+                        InitDataList();
                         selectDevice = value;
                         print(value);
                       });
