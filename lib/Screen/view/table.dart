@@ -56,9 +56,10 @@ class _tableViewState extends State<tableView> {
   bool WaitTimeCountDeviceListBool = false;
   // var used as stroing last datato it
   var LastData;
-  var DataRev;
+
   // define function for init oe clear DeviceDataList that is used for table row
   void InitDataList() {
+    print("Data Init Called");
     if (this.mounted) {
       setState(() {
         DeviceDataList.clear();
@@ -79,7 +80,6 @@ class _tableViewState extends State<tableView> {
             jsonDecode(selectDevice)["DeviceName"] == event["DEN"]) {
           setState(() {
             TimerDeviceOfflineSate?.cancel();
-            DataRev = true;
             var id = event["ID"];
             DeviceJson newData = DeviceJson.fromJson(event);
             DeviceDataList[id - 1] = newData;
@@ -87,10 +87,9 @@ class _tableViewState extends State<tableView> {
           });
         } else {
           print("ELSE FUNCTION CALLED");
-          //initDeviceTimeOut();
-          if (this.mounted) {
-            setState(() {
-              DataRev = false;
+          if(!TimerDeviceOfflineSate!.isActive){
+            TimerDeviceOfflineSate = Timer(Duration(minutes: 2),() {
+              InitDataList();
             });
           }
         }
@@ -396,6 +395,9 @@ class _tableViewState extends State<tableView> {
   @override
   void initState() {
     getDevice();
+    TimerDeviceOfflineSate = Timer(Duration(minutes: 2),() {
+      InitDataList();
+    });
     super.initState();
   }
 
