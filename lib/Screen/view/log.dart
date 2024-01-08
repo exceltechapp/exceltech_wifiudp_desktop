@@ -831,6 +831,7 @@ class _logViewState extends State<logView> {
                                   vertical: 5, horizontal: 15),
                               child: IconButton(
                                   onPressed: () {
+                                    FlutterToastr.show("Wait!", context);
                                     ExcelFile newfunc = ExcelFile(
                                         selectDevice,
                                         int.parse(selectDeviceId

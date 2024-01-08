@@ -337,7 +337,7 @@ class _tableViewState extends State<tableView> {
           if (DeviceList.isNotEmpty && SPDeviceList.isNotEmpty) {
             print("Deviec Update");
             SavePreferences("DeviceNameList", SPDeviceList.toList());
-            //selectDevice = DeviceList.first;
+            selectDevice = DeviceList.first;
           }
         });
       }
@@ -426,6 +426,7 @@ class _tableViewState extends State<tableView> {
                       ),
                       // Add more decoration..
                     ),
+                    value: DeviceList.isNotEmpty ? DeviceList.first.toString() : null,
                     //value: jsonDecode(selectDevice) == null ? "" : jsonDecode(selectDevice).toString(),
                     hint: const Text(
                       'Select MSD Device',
