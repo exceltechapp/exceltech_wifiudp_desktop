@@ -50,6 +50,7 @@ class _tableViewState extends State<tableView> {
   List<dynamic> DeviceDataList = [];
 
   var LockVar = 1;
+  var LockVar1 = 1;
   var selectDevice;
 
   // bool used for switch b/w screen when MSD device not found
@@ -336,7 +337,10 @@ class _tableViewState extends State<tableView> {
           if (DeviceList.isNotEmpty && SPDeviceList.isNotEmpty) {
             print("Deviec Update");
             SavePreferences("DeviceNameList", SPDeviceList.toList());
-            selectDevice = DeviceList.first;
+            if(LockVar1 == 1){
+              selectDevice = DeviceList.first;
+              LockVar1 = 0;
+            }
           }
         });
       }
