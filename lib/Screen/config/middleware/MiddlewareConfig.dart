@@ -74,13 +74,17 @@ class _MiddlewareConfigState extends State<MiddlewareConfig> {
       // I am connected to a network which is not in the above mentioned networks.
     } else if (connectivityResult == ConnectivityResult.none) {
       // I am not connected to any network.
+
       if (this.mounted) {
         setState(() {
-          MessageNetworkType = "none";
-          ShowError = true;
+          MessageNetworkType = "wifi";
+          ShowWhenBack = true;
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => CheckWiFiMiddleware()));
         });
       }
     }
+    print(MessageNetworkType);
   }
 
   @override
