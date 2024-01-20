@@ -52,6 +52,8 @@ dependencies:
   msgpack_dart: ^1.0.1
   shared_preferences: ^2.2.2
   flutter_launcher_icons: ^0.13.1
+  connectivity_plus: ^5.0.2
+  connectivity_plus_platform_interface: ^1.2.4
 
 
 dev_dependencies:

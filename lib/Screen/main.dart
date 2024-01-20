@@ -4,6 +4,7 @@ import 'dart:ffi';
 
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:exceltech_wifiudp/Screen/config/middleware/MiddlewareConfig.dart';
 import 'package:exceltech_wifiudp/Screen/view/graph.dart';
 import 'package:exceltech_wifiudp/Screen/view/log.dart';
 import 'package:exceltech_wifiudp/Screen/view/table.dart';
@@ -44,6 +45,13 @@ class _mainScreenState extends State<mainScreen> {
       return Align(
         alignment: Alignment.center,
         child: logView(),
+      );
+    }
+    if (index == 3) {
+      //selectDeviceID = null;
+      return Align(
+        alignment: Alignment.center,
+        child: MiddlewareConfig(),
       );
     }
   }
@@ -155,6 +163,30 @@ class _mainScreenState extends State<mainScreen> {
                                   });
                                 },
                                 icon: Icon(FontAwesomeIcons.file)),
+                          ),
+                        ),
+                        Divider(
+                          endIndent: 16,
+                          indent: 16,
+                          thickness: 1.3,
+                          color: Color.fromRGBO(255, 255, 255, 1),
+                        ),
+                        Card(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50)),
+                          color: SwitchViewIndex == 3
+                              ? Colors.white
+                              : Theme.of(context).primaryColor,
+                          elevation: 0,
+                          child: Padding(
+                            padding: EdgeInsets.all(1),
+                            child: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    SwitchViewIndex = 3;
+                                  });
+                                },
+                                icon: Icon(FontAwesomeIcons.gears)),
                           ),
                         ),
                         Divider(
