@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:intl/intl.dart';
 
+import 'showLogDateChart.dart';
 import '../../../UDP/UDP.dart';
 import '../../../model/DeviceId.dart';
 import '../../../model/DeviceJson.dart';
@@ -259,13 +260,13 @@ class _ChartScreenState extends State<ChartScreen> {
             event["VBR"],
           ));
         }
-        if(event["TH"].runtimeType != bool && event["TH"] != 0){
+        if (event["TH"].runtimeType != bool && event["TH"] != 0) {
           chartDataTH!.add(ChartDataTH(
             DateTime.now(),
             event["TH"],
           ));
         }
-        if(event["KW"].runtimeType != bool && event["KW"] != 0){
+        if (event["KW"].runtimeType != bool && event["KW"] != 0) {
           chartDataKW!.add(ChartDataKW(
             DateTime.now(),
             event["KW"],
@@ -1348,13 +1349,21 @@ class _ChartScreenState extends State<ChartScreen> {
                                         maxHeight: 750,
                                       ),
                                     );
-                                    FlutterToastr.show("Please Wait", context);
-                                    if (mounted) {
-                                      clearListChartData();
-                                      startTime =
-                                          dateTimeList?[0].toIso8601String();
-                                      endTime =
-                                          dateTimeList?[1].toIso8601String();
+                                    if (dateTimeList?[0] != null &&
+                                        dateTimeList?[1] != null) {
+                                      FlutterToastr.show("Please Wait", context);
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) => chartLog(
+                                                    selectDevice: selectDevice,
+                                                    selectDeviceId:
+                                                        selectDeviceId,
+                                                    startTime: dateTimeList?[0]
+                                                        .toIso8601String(),
+                                                    endTime: dateTimeList?[1]
+                                                        .toIso8601String(),
+                                                  )));
                                     }
                                   },
                                   icon: Icon(Icons.date_range)))

@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../../Database/LogModel.dart';
-import '../../Function/showLogDateChart.dart';
+import '../chart/screen/showLogDateChart.dart';
 import '../../model/chartModel.dart';
 import '../../UDP/UDP.dart';
 import '../../model/DeviceId.dart';
@@ -1339,8 +1339,8 @@ class _graphViewState extends State<graphView> {
                                         context,
                                         MaterialPageRoute(
                                             builder: (context) => chartLog(
-                                                  DeviceSelected: selectDevice,
-                                                  DeviceSelectedName:
+                                                  selectDevice: selectDevice,
+                                                  selectDeviceId:
                                                       selectDeviceId
                                                           .toString()
                                                           .split("-")

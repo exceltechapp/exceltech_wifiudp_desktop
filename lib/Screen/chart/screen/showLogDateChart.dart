@@ -5,19 +5,19 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-import '../Database/LogModel.dart';
-import '../model/chartModel.dart';
+import '../../../Database/LogModel.dart';
+import '../../../model/chartModel.dart';
 
 class chartLog extends StatefulWidget {
   const chartLog(
       {super.key,
-      this.DeviceSelected,
-      this.DeviceSelectedName,
+      this.selectDevice,
+      this.selectDeviceId,
       this.startTime,
       this.endTime});
 
-  final dynamic DeviceSelected;
-  final dynamic DeviceSelectedName;
+  final dynamic selectDevice;
+  final dynamic selectDeviceId;
   final dynamic startTime;
   final dynamic endTime;
 
@@ -214,58 +214,54 @@ class _chartLogState extends State<chartLog> {
   }
   // define buff var for last min
   var LastMinCheck;
+  /*if (mounted) {
+                  setState(() {
+
+                  });
+                }*/
   // func getting log from local database
   void getLog(dynamic startTime, dynamic endTime) {
-    //SSEHandler.clearLogs();
-    if (widget.DeviceSelected == null || widget.DeviceSelectedName == null) {
-      return;
-    }
-    UDPHandler.getLogsByTimeRangeAndInterval(
-            DateTime.parse(startTime.toString()),
-            DateTime.parse(endTime.toString()))
+    UDPHandler.getLogsByTimeRange(DateTime.parse(startTime.toString()),
+        DateTime.parse(endTime.toString()))
         .then(
-      (List<LogEntry> logs) {
-        if (widget.DeviceSelected == null ||
-            widget.DeviceSelectedName == null) {
+          (List<LogEntry> logs) {
+        if (widget.selectDevice == null || widget.selectDeviceId == null) {
           return;
         }
-        var key = jsonDecode(widget.DeviceSelected!)["DeviceMac"];
-
-        chartDataKW!.clear();
-        chartDataTH!.clear();
-        chartDataVoltage!.clear();
-        chartDataCurrent!.clear();
-
+        var key = jsonDecode(widget.selectDevice!)["DeviceMac"];
         logs.forEach((log) {
           if (log.data is String) {
             try {
               Map<String, dynamic> newdata = jsonDecode(log.data);
-              print(log);
-              if (newdata["ID"] == widget.DeviceSelectedName &&
+              if (newdata["ID"] ==
+                  int.parse(widget.selectDeviceId.toString().split("-").last) &&
                   newdata["MAC"] == key) {
-                if (mounted) {
-                  setState(() {
-                    chartDataCurrent!.add(ChartData(
-                      DateTime.parse(log.time),
-                      newdata["IR"] ?? 0,
-                      newdata["IY"] ?? 0,
-                      newdata["IB"] ?? 0,
-                    ));
-                    chartDataVoltage!.add(ChartDataVoltage(
-                      DateTime.parse(log.time),
-                      newdata["VRY"] ?? 0,
-                      newdata["VYB"] ?? 0,
-                      newdata["VBR"] ?? 0,
-                    ));
-                    chartDataTH!.add(ChartDataTH(
-                      DateTime.parse(log.time),
-                      newdata["TH"] ?? 0,
-                    ));
-                    chartDataKW!.add(ChartDataKW(
-                      DateTime.parse(log.time),
-                      newdata["KW"] ?? 0,
-                    ));
-                  });
+                if (LastMinCheck != DateTime.parse(log.time).minute) {
+                  if (mounted) {
+                    setState(() {
+                      LastMinCheck = DateTime.parse(log.time).minute;
+                      chartDataCurrent!.add(ChartData(
+                        DateTime.parse(log.time),
+                        newdata["IR"] ?? 0,
+                        newdata["IY"] ?? 0,
+                        newdata["IB"] ?? 0,
+                      ));
+                      chartDataVoltage!.add(ChartDataVoltage(
+                        DateTime.parse(log.time),
+                        newdata["VRY"] ?? 0,
+                        newdata["VYB"] ?? 0,
+                        newdata["VBR"] ?? 0,
+                      ));
+                      chartDataTH!.add(ChartDataTH(
+                        DateTime.parse(log.time),
+                        newdata["TH"] ?? 0,
+                      ));
+                      chartDataKW!.add(ChartDataKW(
+                        DateTime.parse(log.time),
+                        newdata["KW"] ?? 0,
+                      ));
+                    });
+                  }
                 }
               }
             } catch (e) {
@@ -276,11 +272,6 @@ class _chartLogState extends State<chartLog> {
         });
       },
     );
-    /*SSEHandler.getLogsByTimeRange(DateTime.parse("2023-07-10T12:36:11.172566"),DateTime.now()).then((List<LogEntry> logs){
-      logs.forEach((log) {
-        print("time:${log.time} and data:${log.data}");
-      });
-    });*/
   }
 
   @override
