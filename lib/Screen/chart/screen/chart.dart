@@ -1080,19 +1080,23 @@ class _ChartScreenState extends State<ChartScreen> {
           DeviceId(decodeEvent["DEN"], decodeEvent["MAC"], decodeEvent["SIZE"]);
       if (this.mounted) {
         setState(() {
-          DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
-          SPDeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+          if (!DeviceList.contains(jsonEncode(newDeviceModel.mapModel()))) {
+            DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+            SPDeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+          }
           if (DeviceList.isNotEmpty && SPDeviceList.isNotEmpty) {
             print("Deviec Update");
-            SavePreferences("DeviceNameList", SPDeviceList.toList());
             if (LockVar1 == 1) {
+              print(DeviceList.first);
               selectDevice = DeviceList.first;
               LockVar1 = 0;
             }
+            SavePreferences("DeviceNameList", SPDeviceList.toList());
           }
         });
       }
     });
+    print(selectDevice);
   }
 
   // define function for MSD Device not wait timer
@@ -1147,6 +1151,20 @@ class _ChartScreenState extends State<ChartScreen> {
   @override
   void initState() {
     initChartdata();
+    GetPreferences("DeviceNameList").then((x) {
+      x as List<String>;
+      Set UniList = {};
+      x.forEach((element) {
+        Map MapData = jsonDecode(element);
+        MapData.remove("Size");
+        UniList.add(jsonEncode(MapData));
+      });
+      if(this.mounted){
+        setState(() {
+          DeviceList.addAll(UniList);
+        });
+      }
+    });
     getDevice();
     TimerDeviceOfflineSate = Timer(Duration(minutes: 2), () {
       InitDataList();
@@ -1195,6 +1213,7 @@ class _ChartScreenState extends State<ChartScreen> {
                               'Select MSD Device',
                               style: TextStyle(fontSize: 14),
                             ),
+                            //value: DeviceList.isNotEmpty ? DeviceList.first.toString() : null,
                             items: DeviceList.map(
                                 (item) => DropdownMenuItem<String>(
                                       value: item.toString(),
@@ -1381,7 +1400,15 @@ class _ChartScreenState extends State<ChartScreen> {
                           ],
                         )
                       : Card(),
-                  selectDeviceId == null ? Card() : LiveChart(),
+                  selectDeviceId == null ? Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      selectDevice == null || selectDeviceId == null ? CircularProgressIndicator() : Container(),
+                      DeviceList.isNotEmpty && selectDevice == null? Padding(padding: EdgeInsets.all(20),child: Text("SELECT MSD DEVICE"),):Container(),
+                      selectDevice != null && selectDeviceId == null? Padding(padding: EdgeInsets.all(20),child: Text("SELECT ID"),) : Container()
+                    ],
+                  )) : LiveChart(),
                 ],
               ));
   }

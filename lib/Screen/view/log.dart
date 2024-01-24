@@ -89,7 +89,9 @@ class _logViewState extends State<logView> {
           DeviceId(decodeEvent["DEN"], decodeEvent["MAC"], decodeEvent["SIZE"]);
       if (this.mounted) {
         setState(() {
-          DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+          if(!DeviceList.contains(jsonEncode(newDeviceModel.mapModel()))){
+            DeviceList.add(jsonEncode(newDeviceModel.mapModelSize()));
+          }
         });
       }
     });
@@ -606,12 +608,18 @@ class _logViewState extends State<logView> {
   @override
   void initState() {
     GetPreferences("DeviceNameList").then((x) {
-      if(this.mounted){
-        setState(() {
-          DeviceList.addAll(x);
-        });
-      }
-      print(x);
+      x as List<String>;
+      Set UniList = {};
+      x.forEach((element) {
+        Map MapData = jsonDecode(element);
+        MapData.remove("Size");
+        UniList.add(jsonEncode(MapData));
+      });
+     if(this.mounted){
+       setState(() {
+         DeviceList.addAll(UniList);
+       });
+     }
     });
     getDevice();
     super.initState();

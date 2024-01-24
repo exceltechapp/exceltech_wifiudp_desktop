@@ -88,8 +88,8 @@ class _tableViewState extends State<tableView> {
           });
         } else {
           print("ELSE FUNCTION CALLED");
-          if(!TimerDeviceOfflineSate!.isActive){
-            TimerDeviceOfflineSate = Timer(Duration(minutes: 2),() {
+          if (!TimerDeviceOfflineSate!.isActive) {
+            TimerDeviceOfflineSate = Timer(Duration(minutes: 2), () {
               InitDataList();
             });
           }
@@ -332,12 +332,14 @@ class _tableViewState extends State<tableView> {
           DeviceId(decodeEvent["DEN"], decodeEvent["MAC"], decodeEvent["SIZE"]);
       if (this.mounted) {
         setState(() {
-          DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
-          SPDeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+          if (!DeviceList.contains(jsonEncode(newDeviceModel.mapModel()))) {
+            DeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+            SPDeviceList.add(jsonEncode(newDeviceModel.mapModel()));
+          }
           if (DeviceList.isNotEmpty && SPDeviceList.isNotEmpty) {
             print("Deviec Update");
             SavePreferences("DeviceNameList", SPDeviceList.toList());
-            if(LockVar1 == 1){
+            if (LockVar1 == 1) {
               selectDevice = DeviceList.first;
               LockVar1 = 0;
             }
@@ -399,7 +401,7 @@ class _tableViewState extends State<tableView> {
   @override
   void initState() {
     getDevice();
-    TimerDeviceOfflineSate = Timer(Duration(minutes: 2),() {
+    TimerDeviceOfflineSate = Timer(Duration(minutes: 2), () {
       InitDataList();
     });
     super.initState();
@@ -432,7 +434,9 @@ class _tableViewState extends State<tableView> {
                       ),
                       // Add more decoration..
                     ),
-                    value: DeviceList.isNotEmpty ? DeviceList.first.toString() : null,
+                    value: DeviceList.isNotEmpty
+                        ? DeviceList.first.toString()
+                        : null,
                     //value: jsonDecode(selectDevice) == null ? "" : jsonDecode(selectDevice).toString(),
                     hint: const Text(
                       'Select MSD Device',

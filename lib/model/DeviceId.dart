@@ -6,6 +6,9 @@ class DeviceId {
   DeviceId(this.DeviceName, this.DeviceMac,this.Size);
 
   Map<String, dynamic> mapModel() {
+    return {'DeviceMac': DeviceMac, 'DeviceName': DeviceName};
+  }
+  Map<String, dynamic> mapModelSize() {
     return {'DeviceMac': DeviceMac, 'DeviceName': DeviceName,'Size':Size};
   }
 }

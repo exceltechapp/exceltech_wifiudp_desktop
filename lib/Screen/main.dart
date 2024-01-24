@@ -218,7 +218,7 @@ class _mainScreenState extends State<mainScreen> {
                                     SwitchViewIndex = 4;
                                   });
                                 },
-                                icon: Icon(FontAwesomeIcons.gears)),
+                                icon: Icon(FontAwesomeIcons.add)),
                           ),
                         ),
                         Divider(
