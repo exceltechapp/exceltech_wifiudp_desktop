@@ -239,7 +239,7 @@ class _ChartScreenState extends State<ChartScreen> {
           event["MAC"] == jsonDecode(selectDevice)["DeviceMac"]) {
         TimerDeviceOfflineSate?.cancel();
         LastData = event["ID"];
-        print(event["IR"].runtimeType);
+        print(event);
         if ((event["IR"].runtimeType != bool && event["IR"] != 0) &&
             (event["IY"].runtimeType != bool && event["IY"] != 0) &&
             (event["IB"].runtimeType != bool && event["IB"] != 0)) {
@@ -266,6 +266,7 @@ class _ChartScreenState extends State<ChartScreen> {
             event["TH"],
           ));
         }
+        print(event["KW"]);
         if (event["KW"].runtimeType != bool && event["KW"] != 0) {
           chartDataKW!.add(ChartDataKW(
             DateTime.now(),
@@ -1091,6 +1092,20 @@ class _ChartScreenState extends State<ChartScreen> {
               selectDevice = DeviceList.first;
               LockVar1 = 0;
             }
+            GetPreferences("DeviceNameList").then((x) {
+              x as List<String>;
+              Set<String> UniList = {};
+              x.forEach((element) {
+                Map MapData = jsonDecode(element);
+                MapData.remove("Size");
+                UniList.add(jsonEncode(MapData));
+              });
+              if(this.mounted){
+                setState(() {
+                  SPDeviceList.addAll(UniList);
+                });
+              }
+            });
             SavePreferences("DeviceNameList", SPDeviceList.toList());
           }
         });
@@ -1164,6 +1179,7 @@ class _ChartScreenState extends State<ChartScreen> {
           DeviceList.addAll(UniList);
         });
       }
+      //print(x);
     });
     getDevice();
     TimerDeviceOfflineSate = Timer(Duration(minutes: 2), () {
@@ -1234,7 +1250,7 @@ class _ChartScreenState extends State<ChartScreen> {
                               //Do something when selected item is changed.
                               setState(() {
                                 //DeviceDataList.clear();
-
+                                clearListChartData();
                                 selectDevice = value;
                               });
                             },
@@ -1370,6 +1386,7 @@ class _ChartScreenState extends State<ChartScreen> {
                                     );
                                     if (dateTimeList?[0] != null &&
                                         dateTimeList?[1] != null) {
+                                      print("${dateTimeList?[0]} ${dateTimeList?[1]}");
                                       FlutterToastr.show("Please Wait", context);
                                       Navigator.push(
                                           context,

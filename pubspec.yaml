@@ -54,6 +54,7 @@ dependencies:
   flutter_launcher_icons: ^0.13.1
   connectivity_plus: ^5.0.2
   connectivity_plus_platform_interface: ^1.2.4
+  mini_server: ^1.1.0
 
 
 dev_dependencies:

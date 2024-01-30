@@ -1,19 +1,17 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:ffi';
 
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:exceltech_wifiudp/Screen/chart/screen/chart.dart';
 import 'package:exceltech_wifiudp/Screen/config/middleware/MiddlewareConfig.dart';
+import 'package:exceltech_wifiudp/Screen/setting/screen/SettingScreen.dart';
 import 'package:exceltech_wifiudp/Screen/view/graph.dart';
 import 'package:exceltech_wifiudp/Screen/view/log.dart';
 import 'package:exceltech_wifiudp/Screen/view/table.dart';
-import 'package:exceltech_wifiudp/model/DeviceId.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../SEVER/SEVER.dart';
 import '../UDP/UDP.dart';
+
 
 class mainScreen extends StatefulWidget {
   const mainScreen({super.key});
@@ -30,7 +28,7 @@ class _mainScreenState extends State<mainScreen> {
   var selectDevice;
   var selectDeviceID;
 
-  SwitchView(var index) {
+  static Widget SwitchView(var index) {
     if (index == 0) {
       return tableView();
     }
@@ -62,11 +60,20 @@ class _mainScreenState extends State<mainScreen> {
         child: MiddlewareConfig(),
       );
     }
+    if (index == 5) {
+      //selectDeviceID = null;
+      return Align(
+        alignment: Alignment.center,
+        child: SettingView(),
+      );
+    }
+    return Container();
   }
 
   @override
   void initState() {
     UDPHandler.startUDPConnection(context);
+    SERVERHandler.initializeServer();
     super.initState();
   }
 
@@ -219,6 +226,30 @@ class _mainScreenState extends State<mainScreen> {
                                   });
                                 },
                                 icon: Icon(FontAwesomeIcons.add)),
+                          ),
+                        ),
+                        Divider(
+                          endIndent: 16,
+                          indent: 16,
+                          thickness: 1.3,
+                          color: Color.fromRGBO(255, 255, 255, 1),
+                        ),
+                        Card(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50)),
+                          color: SwitchViewIndex == 5
+                              ? Colors.white
+                              : Theme.of(context).primaryColor,
+                          elevation: 0,
+                          child: Padding(
+                            padding: EdgeInsets.all(1),
+                            child: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    SwitchViewIndex = 5;
+                                  });
+                                },
+                                icon: Icon(FontAwesomeIcons.gear)),
                           ),
                         ),
                         Divider(

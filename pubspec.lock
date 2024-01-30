@@ -496,6 +496,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
+  mini_server:
+    dependency: "direct main"
+    description:
+      name: mini_server
+      sha256: fd5c45c5ce2eab26647d671886b2eb10b3175b8815fae6ab6a3afd4958d9bb35
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   msgpack_dart:
     dependency: "direct main"
     description:

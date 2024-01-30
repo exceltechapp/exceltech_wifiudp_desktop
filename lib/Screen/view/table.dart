@@ -338,11 +338,25 @@ class _tableViewState extends State<tableView> {
           }
           if (DeviceList.isNotEmpty && SPDeviceList.isNotEmpty) {
             print("Deviec Update");
-            SavePreferences("DeviceNameList", SPDeviceList.toList());
             if (LockVar1 == 1) {
               selectDevice = DeviceList.first;
               LockVar1 = 0;
             }
+            GetPreferences("DeviceNameList").then((x) {
+              x as List<String>;
+              Set<String> UniList = {};
+              x.forEach((element) {
+                Map MapData = jsonDecode(element);
+                MapData.remove("Size");
+                UniList.add(jsonEncode(MapData));
+              });
+              if(this.mounted){
+                setState(() {
+                  SPDeviceList.addAll(UniList);
+                });
+              }
+            });
+            SavePreferences("DeviceNameList", SPDeviceList.toList());
           }
         });
       }
