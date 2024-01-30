@@ -260,14 +260,13 @@ class _ChartScreenState extends State<ChartScreen> {
             event["VBR"],
           ));
         }
-        if (event["TH"].runtimeType != bool && event["TH"] != 0) {
+        if (event["TH"] != 0 && event["TH"] != null) {
           chartDataTH!.add(ChartDataTH(
             DateTime.now(),
-            event["TH"],
+            event["TH"] ?? 0,
           ));
         }
-        print(event["KW"]);
-        if (event["KW"].runtimeType != bool && event["KW"] != 0) {
+        if (event["KW"] != 0 && event["KW"] != null) {
           chartDataKW!.add(ChartDataKW(
             DateTime.now(),
             event["KW"],
@@ -1100,7 +1099,7 @@ class _ChartScreenState extends State<ChartScreen> {
                 MapData.remove("Size");
                 UniList.add(jsonEncode(MapData));
               });
-              if(this.mounted){
+              if (this.mounted) {
                 setState(() {
                   SPDeviceList.addAll(UniList);
                 });
@@ -1174,7 +1173,7 @@ class _ChartScreenState extends State<ChartScreen> {
         MapData.remove("Size");
         UniList.add(jsonEncode(MapData));
       });
-      if(this.mounted){
+      if (this.mounted) {
         setState(() {
           DeviceList.addAll(UniList);
         });
@@ -1386,8 +1385,10 @@ class _ChartScreenState extends State<ChartScreen> {
                                     );
                                     if (dateTimeList?[0] != null &&
                                         dateTimeList?[1] != null) {
-                                      print("${dateTimeList?[0]} ${dateTimeList?[1]}");
-                                      FlutterToastr.show("Please Wait", context);
+                                      print(
+                                          "${dateTimeList?[0]} ${dateTimeList?[1]}");
+                                      FlutterToastr.show(
+                                          "Please Wait", context);
                                       Navigator.push(
                                           context,
                                           MaterialPageRoute(
@@ -1417,15 +1418,30 @@ class _ChartScreenState extends State<ChartScreen> {
                           ],
                         )
                       : Card(),
-                  selectDeviceId == null ? Expanded(child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      selectDevice == null || selectDeviceId == null ? CircularProgressIndicator() : Container(),
-                      DeviceList.isNotEmpty && selectDevice == null? Padding(padding: EdgeInsets.all(20),child: Text("SELECT MSD DEVICE"),):Container(),
-                      selectDevice != null && selectDeviceId == null? Padding(padding: EdgeInsets.all(20),child: Text("SELECT ID"),) : Container()
-                    ],
-                  )) : LiveChart(),
+                  selectDeviceId == null
+                      ? Expanded(
+                          child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            selectDevice == null || selectDeviceId == null
+                                ? CircularProgressIndicator()
+                                : Container(),
+                            DeviceList.isNotEmpty && selectDevice == null
+                                ? Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: Text("SELECT MSD DEVICE"),
+                                  )
+                                : Container(),
+                            selectDevice != null && selectDeviceId == null
+                                ? Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: Text("SELECT ID"),
+                                  )
+                                : Container()
+                          ],
+                        ))
+                      : LiveChart(),
                 ],
               ));
   }
