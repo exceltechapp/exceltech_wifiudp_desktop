@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:exceltech_wifiudp/SEVER/SEVER.dart';
 import 'package:flutter/material.dart';
 
 class SettingView extends StatefulWidget {
@@ -31,26 +32,35 @@ class _SettingViewState extends State<SettingView> {
       handleRequest(request);
     }
   }
-  void handleRequest(HttpRequest request) async {
+  void handleRequest(HttpRequest request){
     if (request.method == 'GET') {
       // Handle GET request
       request.response.write('Hello From Server!');
     } else if (request.method == 'POST') {
       // Handle POST request
-      var content = await utf8.decoder.bind(request).join();
+      var content = utf8.decoder.bind(request).join();
       print('Received POST data: $content');
       request.response.write('Data received successfully.');
     } else {
       request.response.write('Unsupported request method');
     }
 
-    await request.response.close();
+    request.response.close();
   }
   @override
   Widget build(BuildContext context) {
-    ServerFunction();
     return Scaffold(
-      body: Container(),
+      body: Container(
+        width: MediaQuery.sizeOf(context).width,
+        height: MediaQuery.sizeOf(context).height,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+          ],
+        ),
+      ),
     );
   }
 }

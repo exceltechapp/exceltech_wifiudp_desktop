@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../../main.dart';
+
 class MessageComplete extends StatefulWidget {
   const MessageComplete({Key? key});
 
@@ -23,6 +25,17 @@ class _MessageCompleteState extends State<MessageComplete> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.black),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+            onPressed: () {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => mainScreen()));
+            },
+            icon: Icon(Icons.arrow_back_sharp)),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

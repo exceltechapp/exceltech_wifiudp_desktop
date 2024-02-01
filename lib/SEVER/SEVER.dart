@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -8,14 +9,27 @@ import '../Database/LogModel.dart';
 import '../UDP/UDP.dart';
 
 class SERVERHandler {
-  static final MiniServer miniServer = MiniServer(
-    host: '192.168.1.120',
-    port: 8090,
-  );
   static var payload = [];
+  static var IP = "";
   static var LastMinCheck;
+  static Future<List> getLocalIpAddressAsync() async {
+    /*for (var interface in await NetworkInterface.list()) {
+      print(interface.addresses);
+    }*/
+    List<NetworkInterface> NetworkList = [];
+    List<dynamic> NetworkListInterface = await NetworkInterface.list();
+    NetworkListInterface.forEach((element) {
+      NetworkList.add(element);
+    });
+    return NetworkList;
+  }
   // Initialize the server automatically when the file is loaded
-  static void initializeServer() {
+  static void initializeServer(InternetAddress IP){
+     final MiniServer miniServer = MiniServer(
+      host: IP.address,
+      port: 8090,
+    );
+    print("Sever Running on IP-> ${IP} and Port 8090");
     miniServer.get("/", (HttpRequest httpRequest) async {
       // Read the request body as a list of bytes
       var requestBodyBytes = await httpRequest.cast<Uint8List>().toList();

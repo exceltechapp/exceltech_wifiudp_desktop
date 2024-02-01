@@ -153,7 +153,7 @@ class _configState extends State<config> {
                                         builder: (context) =>
                                             DeviceConfigWithWiFi(
                                               WiFiObject:
-                                              WiFi_list[selectedindex],
+                                              WiFi_list[selectedindex], eth: false,
                                             )),
                                   );
                                 }

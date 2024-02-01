@@ -73,7 +73,11 @@ class _mainScreenState extends State<mainScreen> {
   @override
   void initState() {
     UDPHandler.startUDPConnection(context);
-    SERVERHandler.initializeServer();
+    SERVERHandler.getLocalIpAddressAsync().then((value){
+      value.forEach((element) {
+        print(element);
+      });
+    });
     super.initState();
   }
 

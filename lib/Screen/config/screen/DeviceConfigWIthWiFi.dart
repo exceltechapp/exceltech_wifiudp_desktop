@@ -13,8 +13,9 @@ import 'complete.dart';
 import 'fail.dart';
 
 class DeviceConfigWithWiFi extends StatefulWidget {
-  const DeviceConfigWithWiFi({super.key, required this.WiFiObject});
+  const DeviceConfigWithWiFi({super.key, required this.WiFiObject, required this.eth});
   final Map<String, dynamic> WiFiObject;
+  final bool eth;
   @override
   State<DeviceConfigWithWiFi> createState() => _DeviceConfigWithWiFiState();
 }
@@ -82,39 +83,39 @@ class _DeviceConfigWithWiFiState extends State<DeviceConfigWithWiFi> {
         wifi_passwordController.value.text.trim());
     var payload = jsonEncode(newSetConfigModel.toJsonDevice());
     print(payload);
-      var urlWifi = Uri.http('192.168.4.1', 'setConfig');
-      var response = await http.post(
-        urlWifi,
-        headers: {"Content-Type": "application/json"},
-        body: payload,
-      );
+    var urlWifi = Uri.http('192.168.4.1', 'setConfig');
+    var response = await http.post(
+      urlWifi,
+      headers: {"Content-Type": "application/json"},
+      body: payload,
+    );
 
-      if (response.statusCode == 200) {
-        print("done");
-        //var ReWifi = Uri.http('192.168.4.1', 'Restart');
-        print(response.body);
-        //await http.get(ReWifi);
-        success = true; // Set success to true to exit the loop
-      } else if (response.statusCode != 200 && this.mounted) {
-        print(response.statusCode);
-        print(response.body);
-        // You can add a delay here before retrying if needed
-        await Future.delayed(Duration(seconds: 5));
-      }
-      if(success==true){
+    if (response.statusCode == 200) {
+      print("done");
+      //var ReWifi = Uri.http('192.168.4.1', 'Restart');
+      print(response.body);
+      //await http.get(ReWifi);
+      success = true; // Set success to true to exit the loop
+    } else if (response.statusCode != 200 && this.mounted) {
+      print(response.statusCode);
+      print(response.body);
+      // You can add a delay here before retrying if needed
+      await Future.delayed(Duration(seconds: 5));
+    }
+    if (success == true) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MessageComplete()),
+      );
+    } else {
+      Timer.periodic(Duration(minutes: 1, seconds: 30), (timer) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MessageComplete()),
+          MaterialPageRoute(builder: (context) => MessageFail()),
         );
-      }else{
-        Timer.periodic(Duration(minutes: 1,seconds: 30), (timer) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => MessageFail()),
-          );
-        });
-      }
-      currentRetry++;
+      });
+    }
+    currentRetry++;
   }
 
   void restartApp() {
@@ -184,6 +185,7 @@ class _DeviceConfigWithWiFiState extends State<DeviceConfigWithWiFi> {
   @override
   void initState() {
     getLastData();
+    //showDisplay = true;
     super.initState();
   }
 
@@ -204,7 +206,7 @@ class _DeviceConfigWithWiFiState extends State<DeviceConfigWithWiFi> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    Padding(
+                   widget.eth == false ? Padding(
                       padding: EdgeInsets.all(10),
                       child: ListTile(
                         shape: RoundedRectangleBorder(
@@ -229,8 +231,8 @@ class _DeviceConfigWithWiFiState extends State<DeviceConfigWithWiFi> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                    widget.WiFiObject["open"] == false
+                    ) : Container(),
+                    widget.eth == false ? widget.WiFiObject["open"] == false
                         ? Padding(
                             padding: EdgeInsets.symmetric(
                                 vertical: 2, horizontal: 5),
@@ -268,7 +270,7 @@ class _DeviceConfigWithWiFiState extends State<DeviceConfigWithWiFi> {
                               ),
                             ),
                           )
-                        : Container(),
+                        : Container() : Container(),
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 2, horizontal: 5),
                       child: textFieldForm(
@@ -328,18 +330,29 @@ class _DeviceConfigWithWiFiState extends State<DeviceConfigWithWiFi> {
                           setState(() {
                             Device_Index = int.parse(value!);
                           });
-                          listTextController = List.generate(
-                            Device_Index,
-                            (_) => TextEditingController(),
-                          );
-
+                          if (Device_Index <= listTextController.length) {
+                            for (int i = Device_Index-1;
+                                i <= listTextController.length;
+                                i++) {
+                              setState(() {
+                                listTextController
+                                    .remove(listTextController.last);
+                                listDropDownList
+                                    .remove(listDropDownList.last);
+                              });
+                            }
+                          }
+                          for (int i = listTextController.length;
+                              i <= Device_Index - 1;
+                              i++) {
+                            setState(() {
+                              listTextController.add(TextEditingController());
+                              listDropDownList.add(TextEditingController());
+                            });
+                          }
                           for (int i = 0; i <= Device_Index - 1; i++) {
                             listTextController[i].text = "MPD-${i + 1}";
                           }
-                          listDropDownList = List.generate(
-                            Device_Index,
-                            (_) => TextEditingController(),
-                          );
                         },
                         onSaved: (value) {
                           setState(() {

@@ -55,6 +55,7 @@ dependencies:
   connectivity_plus: ^5.0.2
   connectivity_plus_platform_interface: ^1.2.4
   mini_server: ^1.1.0
+  get_ip_address: ^0.0.6
 
 
 dev_dependencies:

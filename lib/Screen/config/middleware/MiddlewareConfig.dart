@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
+import '../screen/SelectNetworkType.dart';
 import 'CheckWiFiMiddleware.dart';
 
 class MiddlewareConfig extends StatefulWidget {
@@ -79,8 +80,10 @@ class _MiddlewareConfigState extends State<MiddlewareConfig> {
         setState(() {
           MessageNetworkType = "wifi";
           ShowWhenBack = true;
+          /*Navigator.push(context,
+              MaterialPageRoute(builder: (context) => CheckWiFiMiddleware()));*/
           Navigator.push(context,
-              MaterialPageRoute(builder: (context) => CheckWiFiMiddleware()));
+          MaterialPageRoute(builder: (context) => SelectDeviceNetworkType()));
         });
       }
     }
